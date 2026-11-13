@@ -125,11 +125,6 @@
   .zelle .to strong{font-size:20px;color:var(--navy);word-break:break-all}
   .pending{background:#fff3c4;border-radius:16px;padding:16px;margin:14px 0;font-weight:700;color:var(--navy)}
 
-  .contacts{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
-  .contact{background:var(--navy);color:#fff;border-radius:18px;padding:18px}
-  .contact strong{font-size:20px;display:block}
-  .contact span{display:block;margin:2px 0 12px;font-weight:700;color:var(--yellow)}
-  .contact .btn{margin:0 6px 6px 0;background:#fff;color:var(--navy);padding:8px 18px}
 
   dialog{border:0;border-radius:22px;padding:0;max-width:440px;width:calc(100% - 28px);
     box-shadow:0 20px 60px rgba(20,34,79,.45)}
@@ -169,7 +164,6 @@
   <a href="#wall">Our Sponsors</a>
   <a href="#story">Tell a Story</a>
   <a href="#pay">Pay by Zelle</a>
-  <a href="#contact">Contact</a>
   <a href="signin.html" id="nav-auth" class="auth">Sign in</a>
 </div></nav>
 
@@ -231,7 +225,7 @@
     <div class="card">
       <div class="shout" id="shout" hidden><div class="s1">NO SPONSOR YET!</div><div class="s2">WILL YOU SPONSOR THIS WEEK?</div></div>
       <div id="weeks"></div>
-      <p class="note">Tap an open week to reserve it. Your request is sent by text to the organizer, who confirms and marks the week as sponsored.</p>
+      <p class="note">Sign in with Google, then tap an open week to reserve it. Your request is sent by text to the organizer, who confirms and marks the week as sponsored.</p>
     </div>
   </section>
 
@@ -246,7 +240,7 @@
       <div class="raffle">🎟️ Sign up to tell a story and earn an <strong>extra ticket</strong> for the end-of-season <strong>Special Super Mega Raffle!</strong></div>
       <div id="stories"></div>
       <div class="raffle" id="story-thanks" role="status" hidden></div>
-      <p class="note">Tap an open week and enter your name and phone number. An organizer will confirm with you.</p>
+      <p class="note">Sign in with Google, then tap an open week and enter your name and phone number. An organizer will confirm with you.</p>
     </div>
   </section>
 
@@ -259,15 +253,11 @@
         <li>Send to the account shown above.</li>
         <li id="amount-step"></li>
         <li>In the memo, write <strong>Dor L'Dor</strong> and the date of the week you are sponsoring.</li>
-        <li>Text one of the organizers below so your week is confirmed.</li>
+        <li>Text an organizer so your week is confirmed.</li>
       </ol>
     </div>
   </section>
 
-  <section id="contact">
-    <h2>Sponsorship Opportunities or Questions</h2>
-    <div class="contacts" id="contacts"></div>
-  </section>
 
 </main>
 
@@ -363,7 +353,7 @@ $("info-date").textContent = "📅 " + longDate(current.date);
 if (current.time) $("info-time").textContent = "🕒 " + current.time; else $("info-time").remove();
 
 // Week lists: sponsorship spots and storyteller spots
-let chosen = null, mode = "sponsor";
+let chosen = null, mode = "sponsor", me = null;
 // Storyteller sign-ups: sent to the Google Form in CONFIG when it is set.
 const STORE = "dorldor-storyteller-signups";
 function localSignups() {
@@ -402,9 +392,11 @@ function renderWeeks(boxId, kind) {
       if (kind === "sponsor" && w.dedication) f.append(el("small", null, w.dedication));
       row.append(f);
     } else {
-      const label = kind === "sponsor"
-        ? (i === 0 ? "No sponsor yet — sponsor this week" : "Open — sponsor this week")
-        : "Sign me up! I am happy to tell the story";
+      const label = !me
+        ? (kind === "sponsor" ? "Sign in to sponsor this week" : "Sign in to tell the story")
+        : kind === "sponsor"
+          ? (i === 0 ? "No sponsor yet — sponsor this week" : "Open — sponsor this week")
+          : "Sign me up! I am happy to tell the story";
       const b = el("button", kind === "sponsor" ? "btn-pink" : "btn-navy", label);
       b.type = "button";
       b.addEventListener("click", () => {
@@ -462,21 +454,12 @@ if (CONFIG.zelle.to) {
   });
   box.append(to, copy); zb.append(box);
 } else {
-  zb.append(el("div", "pending", "Zelle details are coming soon. Until then, please contact one of the organizers below to arrange payment."));
+  zb.append(el("div", "pending", "Zelle details are coming soon. Until then, please speak with an organizer to arrange payment."));
 }
 $("amount-step").textContent = CONFIG.amount
   ? "Enter the sponsorship amount: " + CONFIG.amount + "."
   : "Enter the sponsorship amount — ask an organizer for the amount.";
 
-// Contacts
-CONFIG.contacts.forEach(c => {
-  const card = el("div", "contact");
-  card.append(el("strong", null, c.name), el("span", null, c.phone));
-  const call = el("a", "btn", "Call"); call.href = "tel:" + digits(c.phone);
-  const text = el("a", "btn", "Text"); text.href = "sms:" + digits(c.phone);
-  card.append(call, text);
-  $("contacts").append(card);
-});
 
 // Sign-up dialog: builds a pre-written text to the chosen organizer
 CONFIG.contacts.forEach(c => {
@@ -509,7 +492,7 @@ $("dlg-signup").addEventListener("click", async () => {
     $("dlg-form").reset();
     renderWeeks("stories", "story");
   } catch {
-    thanks.textContent = "Sorry — your sign-up did not go through. Please contact an organizer below.";
+    thanks.textContent = "Sorry — your sign-up did not go through. Please speak with an organizer.";
   }
   thanks.hidden = false;
   $("dlg").close();
@@ -517,7 +500,6 @@ $("dlg-signup").addEventListener("click", async () => {
 // RSVP head-count for the current week
 $("rsvp-form").addEventListener("submit", async e => {
   e.preventDefault();
-  if (needSignIn("#rsvp")) return;
   const name = $("r-name").value.trim(), kids = Number($("r-kids").value), g = CONFIG.rsvpForm;
   const rec = { type: "rsvp", date: current.date, parsha: current.parsha, name, kids, submitted: new Date().toISOString() };
   const thanks = $("rsvp-thanks");
@@ -537,19 +519,17 @@ $("rsvp-form").addEventListener("submit", async e => {
     $("rsvp-form").reset();
     if (me) $("r-name").value = Auth.displayName(me);
   } catch {
-    thanks.textContent = "Sorry — that did not go through. Please just come, or contact an organizer below.";
+    thanks.textContent = "Sorry — that did not go through. Please just come, or speak with an organizer.";
   }
   thanks.hidden = false;
 });
 
 $("dlg-close").addEventListener("click", () => $("dlg").close());
 
-// Sign-in (settings are in auth.js). Once Supabase is connected there, RSVP,
-// sponsoring and story sign-up ask the person to sign in first. Until then
-// they work without an account.
-let me = null;
+// Sign-in (settings are in auth.js). Sponsoring and story sign-up require
+// sign-in; RSVP is open to everyone.
 function needSignIn(hash) {
-  if (!Auth.configured || me) return false;
+  if (me) return false;
   location.href = "signin.html?next=" + encodeURIComponent(hash);
   return true;
 }
@@ -561,6 +541,8 @@ Auth.user().then(u => {
   a.href = "#";
   a.addEventListener("click", async e => { e.preventDefault(); await Auth.signOut(); location.reload(); });
   $("r-name").value = name;
+  renderWeeks("weeks", "sponsor");
+  renderWeeks("stories", "story");
   try {
     const next = sessionStorage.getItem("dorldor-next");
     sessionStorage.removeItem("dorldor-next");
