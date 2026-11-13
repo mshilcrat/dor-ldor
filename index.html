@@ -264,13 +264,6 @@
     <h2>Pay by Zelle</h2>
     <div class="card">
       <div id="zelle-box"></div>
-      <ol class="steps">
-        <li>Open Zelle in your banking app.</li>
-        <li>Send to the account shown above.</li>
-        <li id="amount-step"></li>
-        <li>In the memo, write <strong>Dor L'Dor</strong> and the date of the week you are sponsoring.</li>
-        <li>Text an organizer so your week is confirmed.</li>
-      </ol>
     </div>
   </section>
 
@@ -482,9 +475,6 @@ if (CONFIG.zelle.to) {
 } else {
   zb.append(el("div", "pending", "Zelle details are coming soon. Until then, please speak with an organizer to arrange payment."));
 }
-$("amount-step").textContent = CONFIG.amount
-  ? "Enter the sponsorship amount: " + CONFIG.amount + "."
-  : "Enter the sponsorship amount — ask an organizer for the amount.";
 
 
 // Sign-up dialog: builds a pre-written text to the chosen organizer
