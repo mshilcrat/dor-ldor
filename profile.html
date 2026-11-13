@@ -103,7 +103,8 @@
     <div class="card">
       <h2>Raffle tickets</h2>
       <div class="tickets"><b id="tickets">0</b>
-        <span>extra ticket(s) for the end-of-season Special Super Mega Raffle — one for each story you tell (counted once an organizer confirms).</span></div>
+        <span>ticket(s) for the end-of-season Special Super Mega Raffle across your kids — each child gets 1 for every story you tell (once confirmed) and 1 for every 2 weeks in a row they're pre-registered.</span></div>
+      <ul class="list" id="kid-tickets"></ul>
     </div>
 
     <div class="card">
@@ -149,7 +150,12 @@
     const note = r => r.status === "confirmed" ? "" : " · awaiting confirmation";
 
     const stories = st.data || [];
-    $("tickets").textContent = stories.filter(r => r.status === "confirmed").length;
+    const tk = await db.rpc("kid_tickets");
+    const tickets = tk.data || [];
+    $("tickets").textContent = tickets.reduce((n, t) => n + t.total, 0);
+    const kl = $("kid-tickets"); kl.replaceChildren();
+    tickets.forEach(t => kl.append(li(t.first_name + " — " + t.total + (t.total === 1 ? " ticket" : " tickets"),
+      t.story_tickets + " from stories · " + t.attendance_tickets + " from coming 2 weeks in a row")));
     const sl = $("stories"); sl.replaceChildren();
     if (stories.length) stories.forEach(r => sl.append(li("Motzai Shabbat, " + longDate(r.week_date), parsha(r.week_date) + note(r))));
     else sl.replaceWith(Object.assign(empty("You haven't signed up to tell a story yet.", "index.html#story", "Pick a week"), { id: "stories" }));

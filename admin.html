@@ -90,6 +90,7 @@
       <button role="tab" data-tab="sponsors">Sponsors<span class="count" id="n-sponsors" hidden></span></button>
       <button role="tab" data-tab="stories">Storytellers<span class="count" id="n-stories" hidden></span></button>
       <button role="tab" data-tab="rsvps">RSVPs</button>
+      <button role="tab" data-tab="raffle">Raffle</button>
       <button role="tab" data-tab="people">People</button>
       <button role="tab" data-tab="settings">Settings</button>
     </div>
@@ -112,6 +113,13 @@
       <select id="rsvp-week"></select>
       <div class="big"><b id="rsvp-total">0</b><span id="rsvp-total-text"></span></div>
       <div id="rsvps"></div>
+    </div>
+
+    <div class="card" id="tab-raffle" hidden>
+      <h2>Raffle tickets</h2>
+      <div class="big"><b id="raffle-total">0</b><span id="raffle-total-text"></span></div>
+      <div id="raffle"></div>
+      <p class="hint">Each child gets 1 ticket for every story their parent tells (once confirmed) and 1 for every 2 weeks in a row they were pre-registered. Tickets count once the week arrives.</p>
     </div>
 
     <div class="card" id="tab-people" hidden>
@@ -162,7 +170,7 @@ const weekTitle = w => "Motzai Shabbat, " + longDate(w.week_date);
 const btn = (cls, text, fn) => { const b = el("button", cls, text); b.type = "button"; b.addEventListener("click", fn); return b; };
 
 let db = null, me = null;
-let S = { weeks: [], sponsorships: [], storytellers: [], rsvps: [], profiles: [], organizers: [] };
+let S = { weeks: [], sponsorships: [], storytellers: [], rsvps: [], profiles: [], organizers: [], kids: [], kidRsvps: [], tickets: [] };
 
 let toastTimer;
 function toast(text, kind) {
@@ -183,12 +191,16 @@ async function load() {
     db.from("storytellers").select("*").order("created_at"),
     db.from("rsvps").select("*").order("created_at"),
     db.from("profiles").select("*").order("full_name"),
-    db.from("organizers").select("user_id")
+    db.from("organizers").select("user_id"),
+    db.from("kids").select("*"),
+    db.from("kid_rsvps").select("*"),
+    db.rpc("kid_tickets")
   ]);
   const bad = q.find(r => r.error);
   if (bad) { toast("Could not load. " + (bad.error.message || ""), "err"); return; }
   S = { weeks: q[0].data, sponsorships: q[1].data, storytellers: q[2].data, rsvps: q[3].data,
-        profiles: q[4].data, organizers: q[5].data.map(o => o.user_id) };
+        profiles: q[4].data, organizers: q[5].data.map(o => o.user_id),
+        kids: q[6].data, kidRsvps: q[7].data, tickets: q[8].data };
   render();
 }
 
@@ -271,10 +283,25 @@ function renderRsvps() {
   S.weeks.forEach(w => { const o = el("option", null, longDate(w.week_date) + " · Parshat " + w.parsha); o.value = w.week_date; sel.append(o); });
   sel.value = S.weeks.some(w => w.week_date === keep) ? keep : (cur ? cur.week_date : "");
   const list = S.rsvps.filter(r => r.week_date === sel.value), box = $("rsvps");
-  const kids = list.reduce((n, r) => n + r.kids, 0);
+  // Pre-registered kids, grouped by parent
+  const fam = new Map();
+  S.kidRsvps.filter(r => r.week_date === sel.value).forEach(r => {
+    const k = S.kids.find(k => k.id === r.kid_id); if (!k) return;
+    if (!fam.has(r.parent_id)) fam.set(r.parent_id, []);
+    fam.get(r.parent_id).push(k.first_name);
+  });
+  const kidCount = [...fam.values()].reduce((n, a) => n + a.length, 0);
+  const kids = list.reduce((n, r) => n + r.kids, 0) + kidCount;
+  const families = list.length + fam.size;
   $("rsvp-total").textContent = kids;
-  $("rsvp-total-text").textContent = (kids === 1 ? "kid" : "kids") + " expected, from " + list.length + (list.length === 1 ? " family" : " families") + ".";
+  $("rsvp-total-text").textContent = (kids === 1 ? "kid" : "kids") + " expected, from " + families + (families === 1 ? " family" : " families") + ".";
   box.replaceChildren();
+  fam.forEach((names, pid) => {
+    const p = person(pid), row = el("div", "row"), d = el("div", "d");
+    d.append(el("strong", null, (p && (p.full_name || p.email)) || "(unknown parent)"),
+             el("small", null, names.join(", ") + " · " + names.length + (names.length === 1 ? " kid" : " kids") + " · pre-registered"));
+    row.append(d); box.append(row);
+  });
   list.forEach(r => {
     const row = el("div", "row"), d = el("div", "d");
     d.append(el("strong", null, r.parent_name), el("small", null, r.kids + (r.kids === 1 ? " kid" : " kids")));
@@ -284,7 +311,23 @@ function renderRsvps() {
     }));
     row.append(d, acts); box.append(row);
   });
-  if (!list.length) box.append(el("p", "empty", "No RSVPs for this week yet."));
+  if (!list.length && !fam.size) box.append(el("p", "empty", "No RSVPs for this week yet."));
+}
+
+function renderRaffle() {
+  const box = $("raffle"); box.replaceChildren();
+  const total = S.tickets.reduce((n, t) => n + t.total, 0);
+  $("raffle-total").textContent = total;
+  $("raffle-total-text").textContent = (total === 1 ? "ticket" : "tickets") + " in the Special Super Mega Raffle, across " + S.tickets.length + (S.tickets.length === 1 ? " child" : " children") + ".";
+  S.tickets.forEach(t => {
+    const p = person(t.parent_id), row = el("div", "row"), d = el("div", "d");
+    const title = el("strong", null, t.first_name + (t.grade ? " · Grade " + t.grade : ""));
+    title.append(el("span", "tag " + (t.total ? "ok" : "open"), t.total + (t.total === 1 ? " ticket" : " tickets")));
+    d.append(title, el("small", null, ((p && (p.full_name || p.email)) || "(unknown parent)") +
+      " · " + t.story_tickets + " story · " + t.attendance_tickets + " attendance"));
+    row.append(d); box.append(row);
+  });
+  if (!S.tickets.length) box.append(el("p", "empty", "No kids registered yet. Parents add their kids on their profile page."));
 }
 
 function renderPeople() {
@@ -342,7 +385,7 @@ function weekForm(w) {
   return f;
 }
 
-function render() { renderSponsors(); renderStories(); renderRsvps(); renderPeople(); renderSettings(); }
+function render() { renderSponsors(); renderStories(); renderRsvps(); renderRaffle(); renderPeople(); renderSettings(); }
 
 // Add a sponsor by hand (someone who paid in person and has no account)
 let addWeek = null;
