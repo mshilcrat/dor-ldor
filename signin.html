@@ -35,15 +35,12 @@
   input{width:100%;font:inherit;padding:11px 12px;border:2px solid #cdd6ee;border-radius:12px}
   input:focus{outline:none;border-color:var(--teal)}
   .hint{font-size:13px;color:var(--muted);margin-top:4px}
-  button.main,button.google{font:inherit;font-family:"Fredoka",system-ui,sans-serif;font-weight:700;border:0;border-radius:999px;
+  button.main{font:inherit;font-family:"Fredoka",system-ui,sans-serif;font-weight:700;border:0;border-radius:999px;
     padding:13px 22px;cursor:pointer;width:100%;display:block;font-size:17px;margin-top:16px}
   button.main{background:var(--pink);color:#fff}
-  button.google{background:#fff;color:var(--navy);border:2px solid #cdd6ee;margin-top:0}
   button:hover{filter:brightness(1.08)}
   button:disabled{opacity:.5;cursor:not-allowed}
   button:focus-visible,a:focus-visible,.link:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
-  .or{display:flex;align-items:center;gap:10px;color:var(--muted);font-weight:700;font-size:13px;margin:16px 0 2px}
-  .or::before,.or::after{content:"";flex:1;height:2px;background:#e3e8f5}
   .link{background:none;border:0;padding:0;font:inherit;font-weight:700;color:var(--teal);cursor:pointer;text-decoration:underline;font-size:14px}
   .row-end{text-align:right;margin-top:8px}
   .msg{border-radius:14px;padding:12px 14px;margin:14px 0 0;font-weight:700;text-align:center}
@@ -65,9 +62,6 @@
         <button type="button" role="tab" id="tab-signup" aria-selected="false">Create account</button>
       </div>
       <p class="lead" id="lead">Log in to sponsor a week or sign up to tell a story.</p>
-
-      <button class="google" id="google" type="button">Continue with Google</button>
-      <div class="or">or with email</div>
 
       <form id="f-login" novalidate>
         <label for="li-email">Email</label>
@@ -147,7 +141,7 @@
     $("tab-signup").setAttribute("aria-selected", signup);
     $("f-login").hidden = signup; $("f-signup").hidden = !signup;
     $("lead").textContent = signup
-      ? "New here? Create an account with your email, or use Google."
+      ? "New here? Create an account with your email."
       : "Log in to sponsor a week or sign up to tell a story.";
     quiet();
   }
@@ -174,7 +168,7 @@
   }
 
   if (!Auth.configured) {
-    document.querySelectorAll("#entry button.main, #google, #f-forgot button.main").forEach(b => b.disabled = true);
+    document.querySelectorAll("#entry button.main, #f-forgot button.main").forEach(b => b.disabled = true);
     say("Log-in is not switched on yet. Everything else on the main page works for now.");
   } else {
     let recovering = params.get("reset") === "1";
@@ -183,12 +177,6 @@
       if (!u) return;
       if (recovering) show("f-newpass"); else goHome();
     }).catch(() => {});
-
-    $("google").onclick = async () => {
-      $("google").disabled = true; remember();
-      try { await Auth.signInWithGoogle(toProfile ? new URL("profile.html", location.href).href : homeUrl); }
-      catch (e) { $("google").disabled = false; say(explain(e), "err"); }
-    };
 
     $("f-login").onsubmit = e => { e.preventDefault(); const f = e.target; busy(f, async () => {
       const email = $("li-email").value.trim(), pass = $("li-pass").value;
