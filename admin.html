@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Organizers – Dor L'Dor</title>
+<style>
+  @font-face{font-family:"Fredoka";font-weight:300 700;font-display:swap;
+    src:url(fonts/fredoka-latin-wght-normal.woff2) format("woff2");
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2190-2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:"Fredoka";font-weight:300 700;font-display:swap;
+    src:url(fonts/fredoka-hebrew-wght-normal.woff2) format("woff2");
+    unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+  :root{--navy:#14224f;--pink:#d81b60;--yellow:#ffc928;--teal:#149aa3;--sky:#e3f4ff;--muted:#5a6485}
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;min-height:100vh;padding:20px 16px 40px;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;
+    color:var(--navy);line-height:1.5;background:linear-gradient(180deg,#bfe6ff 0,var(--sky) 40%,#fff7d6 100%)}
+  main{max-width:760px;margin:0 auto}
+  h1,h2,h3,button,.kicker,.btn,.tag,.big b{font-family:"Fredoka","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif}
+  .top{text-align:center}
+  .kicker{display:inline-block;background:var(--navy);color:#fff;font-weight:700;font-size:12px;letter-spacing:.08em;padding:6px 16px;border-radius:999px}
+  h1{font-size:clamp(36px,9vw,54px);line-height:1.05;margin:12px 0 2px;font-weight:700;
+    -webkit-text-stroke:7px #fff;paint-order:stroke fill;filter:drop-shadow(0 6px 10px rgba(20,34,79,.2))}
+  .hello{font-weight:700;color:var(--muted);margin:0}
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;background:var(--navy);border-radius:22px;padding:8px;margin-top:18px;
+    box-shadow:0 6px 16px rgba(20,34,79,.25)}
+  .tabs button{background:transparent;color:#fff;font-size:14px;letter-spacing:.04em;text-transform:uppercase;padding:8px 14px}
+  .tabs button[aria-selected=true]{background:var(--yellow);color:var(--navy)}
+  .tabs .count{display:inline-block;background:var(--pink);color:#fff;border-radius:999px;font-size:12px;padding:0 7px;margin-left:6px}
+  .card{background:#fff;border-radius:22px;padding:22px;margin-top:20px;box-shadow:0 6px 20px rgba(20,34,79,.14)}
+  h2{display:table;margin:0 auto 14px;font-size:18px;letter-spacing:.04em;text-transform:uppercase;color:#fff;
+    background:var(--navy);padding:7px 20px;border-radius:999px;box-shadow:0 4px 0 var(--yellow)}
+  h3{margin:18px 0 6px;font-size:17px}
+  label{display:block;font-weight:800;margin:12px 0 4px;font-size:14px}
+  input,select,textarea{width:100%;font:inherit;padding:10px 12px;border:2px solid #cdd6ee;border-radius:12px;background:#fff;color:var(--navy)}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
+  .hint{font-size:13px;color:var(--muted);margin-top:4px}
+  button,.btn{font:inherit;font-weight:700;border:0;border-radius:999px;padding:9px 18px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+  .pink{background:var(--pink);color:#fff} .navy{background:var(--navy);color:#fff}
+  .ghost{background:#eef2fb;color:var(--navy)} .teal{background:var(--teal);color:#fff}
+  .wide{width:100%;margin-top:16px;font-size:17px;padding:12px 22px}
+  button:hover,.btn:hover{filter:brightness(1.08)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  button:focus-visible,a:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+  .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 0;border-bottom:2px dashed #dbe3f5}
+  .row:last-child{border-bottom:0}
+  .row .d{flex:1 1 220px;min-width:0}
+  .row .d strong{display:block;font-size:17px;overflow-wrap:anywhere}
+  .row .d small{display:block;color:var(--muted);font-weight:700;overflow-wrap:anywhere}
+  .row .d em{display:block;color:var(--pink);font-weight:700;font-style:normal}
+  .row .d a{color:var(--teal);font-weight:700}
+  .acts{display:flex;gap:8px;flex-wrap:wrap}
+  .tag{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:999px;
+    margin-left:6px;vertical-align:middle;display:inline-block;white-space:nowrap}
+  .tag.pending{background:var(--yellow);color:var(--navy)} .tag.ok{background:#d9f5ee;color:#0b6a70}
+  .tag.open{background:#eef2fb;color:var(--muted)} .tag.org{background:var(--pink);color:#fff}
+  .big{display:flex;align-items:center;gap:14px;background:var(--yellow);border-radius:18px;padding:16px 18px;margin:14px 0 4px}
+  .big b{font-size:46px;line-height:1} .big span{font-weight:700}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+  .wk{border:2px solid #dbe3f5;border-radius:16px;padding:4px 14px 14px;margin-top:12px}
+  .empty{color:var(--muted);font-weight:700;text-align:center;margin:8px 0}
+  .msg{border-radius:14px;padding:12px 14px;margin:14px 0 0;font-weight:700;text-align:center}
+  .msg.info{background:#fff3c4} .msg.ok{background:#d9f5ee} .msg.err{background:#ffe0ea}
+  #toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);max-width:calc(100% - 32px);z-index:9;margin:0;
+    box-shadow:0 8px 24px rgba(20,34,79,.3)}
+  .foot{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:22px}
+  dialog{border:0;border-radius:22px;padding:22px;max-width:440px;width:calc(100% - 28px);box-shadow:0 20px 60px rgba(20,34,79,.45);color:var(--navy)}
+  dialog::backdrop{background:rgba(20,34,79,.6)}
+  dialog h3{margin:0;font-size:22px;color:var(--pink)}
+  dialog p{margin:6px 0 0;color:var(--muted);font-weight:700}
+  @media (max-width:600px){
+    .tabs button{font-size:12px;padding:7px 10px}
+    .acts{width:100%} .acts button{flex:1}
+    .grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div class="kicker">DOR L'DOR · AVOS U'BANIM</div>
+    <h1>Organizers</h1>
+    <p class="hello" id="hello"></p>
+  </div>
+
+  <div class="msg info" id="gate" hidden></div>
+
+  <div id="content" hidden>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="sponsors">Sponsors<span class="count" id="n-sponsors" hidden></span></button>
+      <button role="tab" data-tab="stories">Storytellers<span class="count" id="n-stories" hidden></span></button>
+      <button role="tab" data-tab="rsvps">RSVPs</button>
+      <button role="tab" data-tab="people">People</button>
+      <button role="tab" data-tab="settings">Settings</button>
+    </div>
+
+    <div class="card" id="tab-sponsors">
+      <h2>Sponsors</h2>
+      <div id="sponsors"></div>
+      <p class="hint">Confirm a request once payment is arranged. Confirmed sponsors appear on the main page and the thank-you wall.</p>
+    </div>
+
+    <div class="card" id="tab-stories" hidden>
+      <h2>Storytellers</h2>
+      <div id="stories"></div>
+      <p class="hint">Phone numbers are visible to organizers only.</p>
+    </div>
+
+    <div class="card" id="tab-rsvps" hidden>
+      <h2>RSVPs</h2>
+      <label for="rsvp-week">Week</label>
+      <select id="rsvp-week"></select>
+      <div class="big"><b id="rsvp-total">0</b><span id="rsvp-total-text"></span></div>
+      <div id="rsvps"></div>
+    </div>
+
+    <div class="card" id="tab-people" hidden>
+      <h2>People</h2>
+      <div id="people"></div>
+      <p class="hint">Organizers can see every sign-up and phone number, and change everything on this page.</p>
+    </div>
+
+    <div id="tab-settings" hidden>
+      <div class="card">
+        <h2>Weeks</h2>
+        <div id="weeks"></div>
+        <button type="button" class="ghost" id="add-week" style="margin-top:14px">+ Add a week</button>
+      </div>
+    </div>
+
+    <div class="foot">
+      <a class="btn ghost" href="index.html">← Back to Dor L'Dor</a>
+      <button class="ghost" type="button" id="signout">Log out</button>
+    </div>
+  </div>
+</main>
+
+<dialog id="dlg">
+  <form id="dlg-form">
+    <h3>Add a sponsor</h3>
+    <p id="dlg-week"></p>
+    <label for="a-name">Sponsor's name</label>
+    <input id="a-name" required>
+    <label for="a-ded">Dedication (optional)</label>
+    <textarea id="a-ded" rows="2" placeholder="In honor of… / In memory of…"></textarea>
+    <div class="acts" style="margin-top:18px">
+      <button class="pink" type="submit">Add as confirmed</button>
+      <button class="ghost" type="button" id="dlg-close">Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="msg" id="toast" role="status" hidden></div>
+
+<script src="auth.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const parse = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const longDate = s => parse(s).toLocaleDateString("en-US", { month: "long", day: "numeric" });
+const weekTitle = w => "Motzai Shabbat, " + longDate(w.week_date);
+const btn = (cls, text, fn) => { const b = el("button", cls, text); b.type = "button"; b.addEventListener("click", fn); return b; };
+
+let db = null, me = null;
+let S = { weeks: [], sponsorships: [], storytellers: [], rsvps: [], profiles: [], organizers: [] };
+
+let toastTimer;
+function toast(text, kind) {
+  const t = $("toast"); t.textContent = text; t.className = "msg " + (kind || "ok"); t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 3500);
+}
+// Run one change, then reload everything so the page always shows what is saved.
+async function act(query, done) {
+  const { error } = await query;
+  if (error) { toast("That did not save. " + (error.message || ""), "err"); return false; }
+  await load(); toast(done || "Saved."); return true;
+}
+
+async function load() {
+  const q = await Promise.all([
+    db.from("weeks").select("*").order("week_date"),
+    db.from("sponsorships").select("*").order("created_at"),
+    db.from("storytellers").select("*").order("created_at"),
+    db.from("rsvps").select("*").order("created_at"),
+    db.from("profiles").select("*").order("full_name"),
+    db.from("organizers").select("user_id")
+  ]);
+  const bad = q.find(r => r.error);
+  if (bad) { toast("Could not load. " + (bad.error.message || ""), "err"); return; }
+  S = { weeks: q[0].data, sponsorships: q[1].data, storytellers: q[2].data, rsvps: q[3].data,
+        profiles: q[4].data, organizers: q[5].data.map(o => o.user_id) };
+  render();
+}
+
+const person = id => S.profiles.find(p => p.id === id);
+function contactLine(id) {
+  const p = person(id); if (!p) return null;
+  const s = el("small");
+  if (p.phone) { const a = el("a", null, p.phone); a.href = "tel:" + p.phone.replace(/[^\d+]/g, ""); s.append(a); }
+  if (p.phone && p.email) s.append(" · ");
+  if (p.email) s.append(p.email);
+  return s;
+}
+function currentWeek() {
+  const t = new Date(); t.setHours(0, 0, 0, 0);
+  return S.weeks.find(w => parse(w.week_date) >= t) || S.weeks[S.weeks.length - 1];
+}
+
+function renderSponsors() {
+  const box = $("sponsors"); box.replaceChildren();
+  let pending = 0;
+  S.weeks.forEach(w => {
+    const r = S.sponsorships.find(s => s.week_date === w.week_date);
+    const row = el("div", "row"), d = el("div", "d"), acts = el("div", "acts");
+    const title = el("strong", null, weekTitle(w));
+    d.append(title, el("small", null, "Parshat " + w.parsha));
+    if (!r) {
+      title.append(el("span", "tag open", "Open"));
+      acts.append(btn("ghost", "+ Add sponsor", () => openAdd(w)));
+    } else {
+      const ok = r.status === "confirmed";
+      if (!ok) pending++;
+      title.append(el("span", "tag " + (ok ? "ok" : "pending"), ok ? "Confirmed" : "Pending"));
+      d.append(el("strong", null, r.sponsor_name));
+      if (r.dedication) d.append(el("em", null, r.dedication));
+      const c = contactLine(r.user_id); if (c && r.user_id !== me.id) d.append(c);
+      if (!ok) acts.append(btn("teal", "Confirm", () =>
+        act(db.from("sponsorships").update({ status: "confirmed" }).eq("id", r.id), "Confirmed. It now shows on the main page.")));
+      acts.append(btn("ghost", ok ? "Remove" : "Decline", () => {
+        if (confirm((ok ? "Remove " : "Decline ") + r.sponsor_name + " for " + longDate(w.week_date) + "? The week opens up again."))
+          act(db.from("sponsorships").delete().eq("id", r.id), "Removed. The week is open again.");
+      }));
+    }
+    row.append(d, acts); box.append(row);
+  });
+  if (!S.weeks.length) box.append(el("p", "empty", "No weeks yet. Add them under Settings."));
+  $("n-sponsors").textContent = pending; $("n-sponsors").hidden = !pending;
+}
+
+function renderStories() {
+  const box = $("stories"); box.replaceChildren();
+  let pending = 0;
+  S.weeks.forEach(w => {
+    const r = S.storytellers.find(s => s.week_date === w.week_date);
+    const row = el("div", "row"), d = el("div", "d"), acts = el("div", "acts");
+    const title = el("strong", null, weekTitle(w));
+    d.append(title, el("small", null, "Parshat " + w.parsha));
+    if (!r) title.append(el("span", "tag open", "Open"));
+    else {
+      const ok = r.status === "confirmed";
+      if (!ok) pending++;
+      title.append(el("span", "tag " + (ok ? "ok" : "pending"), ok ? "Confirmed" : "Pending"));
+      d.append(el("strong", null, r.full_name));
+      const s = el("small"), a = el("a", null, r.phone); a.href = "tel:" + r.phone.replace(/[^\d+]/g, ""); s.append(a); d.append(s);
+      if (!ok) acts.append(btn("teal", "Confirm", () =>
+        act(db.from("storytellers").update({ status: "confirmed" }).eq("id", r.id), "Confirmed.")));
+      acts.append(btn("ghost", "Remove", () => {
+        if (confirm("Remove " + r.full_name + " as storyteller for " + longDate(w.week_date) + "? The week opens up again."))
+          act(db.from("storytellers").delete().eq("id", r.id), "Removed. The week is open again.");
+      }));
+    }
+    row.append(d, acts); box.append(row);
+  });
+  if (!S.weeks.length) box.append(el("p", "empty", "No weeks yet. Add them under Settings."));
+  $("n-stories").textContent = pending; $("n-stories").hidden = !pending;
+}
+
+function renderRsvps() {
+  const sel = $("rsvp-week"), keep = sel.value, cur = currentWeek();
+  sel.replaceChildren();
+  S.weeks.forEach(w => { const o = el("option", null, longDate(w.week_date) + " · Parshat " + w.parsha); o.value = w.week_date; sel.append(o); });
+  sel.value = S.weeks.some(w => w.week_date === keep) ? keep : (cur ? cur.week_date : "");
+  const list = S.rsvps.filter(r => r.week_date === sel.value), box = $("rsvps");
+  const kids = list.reduce((n, r) => n + r.kids, 0);
+  $("rsvp-total").textContent = kids;
+  $("rsvp-total-text").textContent = (kids === 1 ? "kid" : "kids") + " expected, from " + list.length + (list.length === 1 ? " family" : " families") + ".";
+  box.replaceChildren();
+  list.forEach(r => {
+    const row = el("div", "row"), d = el("div", "d");
+    d.append(el("strong", null, r.parent_name), el("small", null, r.kids + (r.kids === 1 ? " kid" : " kids")));
+    const acts = el("div", "acts");
+    acts.append(btn("ghost", "Remove", () => {
+      if (confirm("Remove the RSVP from " + r.parent_name + "?")) act(db.from("rsvps").delete().eq("id", r.id), "Removed.");
+    }));
+    row.append(d, acts); box.append(row);
+  });
+  if (!list.length) box.append(el("p", "empty", "No RSVPs for this week yet."));
+}
+
+function renderPeople() {
+  const box = $("people"); box.replaceChildren();
+  const isOrg = p => S.organizers.includes(p.id);
+  [...S.profiles].sort((a, b) => isOrg(b) - isOrg(a)).forEach(p => {
+    const row = el("div", "row"), d = el("div", "d"), acts = el("div", "acts");
+    const title = el("strong", null, p.full_name || "(no name yet)");
+    if (isOrg(p)) title.append(el("span", "tag org", "Organizer"));
+    if (p.id === me.id) title.append(el("span", "tag open", "You"));
+    d.append(title);
+    const c = contactLine(p.id); if (c) d.append(c);
+    if (p.id !== me.id) {
+      if (isOrg(p)) acts.append(btn("ghost", "Remove organizer", () => {
+        if (confirm("Remove " + (p.full_name || p.email) + " as an organizer? They keep their account but lose access to this page."))
+          act(db.from("organizers").delete().eq("user_id", p.id), "Organizer access removed.");
+      }));
+      else acts.append(btn("pink", "Make organizer", () => {
+        if (confirm("Make " + (p.full_name || p.email) + " an organizer? They will have full access to this page, including everyone's phone numbers."))
+          act(db.from("organizers").insert({ user_id: p.id }), (p.full_name || "They") + " is now an organizer.");
+      }));
+    }
+    row.append(d, acts); box.append(row);
+  });
+}
+
+function renderSettings() {
+  const wb = $("weeks"); wb.replaceChildren();
+  S.weeks.forEach(w => wb.append(weekForm(w)));
+}
+function weekForm(w) {
+  const f = el("form", "wk"), g = el("div", "grid");
+  const field = (label, key, type, ph) => {
+    const wrap = el("div"), l = el("label", null, label), i = el("input");
+    i.type = type || "text"; i.value = (w && w[key]) || ""; i.name = key; if (ph) i.placeholder = ph;
+    if (key === "week_date" || key === "parsha") i.required = true;
+    if (key === "hebrew") { i.dir = "rtl"; i.lang = "he"; }
+    l.append(i); wrap.append(l); return wrap;
+  };
+  g.append(field("Date (Motzai Shabbat)", "week_date", "date"), field("Start time", "start_time", "text", "6:45 PM"),
+           field("Parsha", "parsha", "text", "Toldot"), field("Parsha in Hebrew", "hebrew", "text", "פרשת תולדות"));
+  const acts = el("div", "acts"); acts.style.marginTop = "12px";
+  const save = el("button", "navy", w ? "Save week" : "Add week"); save.type = "submit";
+  acts.append(save);
+  if (w) acts.append(btn("ghost", "Delete", () => {
+    if (confirm("Delete the week of " + longDate(w.week_date) + "? This only works if nobody has signed up for it."))
+      act(db.from("weeks").delete().eq("week_date", w.week_date), "Week deleted.");
+  })); else acts.append(btn("ghost", "Cancel", () => f.remove()));
+  f.append(g, acts);
+  f.addEventListener("submit", e => {
+    e.preventDefault();
+    const v = Object.fromEntries(new FormData(f)); Object.keys(v).forEach(k => v[k] = v[k].trim());
+    act(w ? db.from("weeks").update(v).eq("week_date", w.week_date) : db.from("weeks").insert(v), w ? "Week saved." : "Week added.");
+  });
+  return f;
+}
+
+function render() { renderSponsors(); renderStories(); renderRsvps(); renderPeople(); renderSettings(); }
+
+// Add a sponsor by hand (someone who paid in person and has no account)
+let addWeek = null;
+function openAdd(w) { addWeek = w; $("dlg-form").reset(); $("dlg-week").textContent = weekTitle(w) + " · Parshat " + w.parsha; $("dlg").showModal(); }
+$("dlg-close").onclick = () => $("dlg").close();
+$("dlg-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const sponsor_name = $("a-name").value.trim(), dedication = $("a-ded").value.trim();
+  if (!sponsor_name) return;
+  $("dlg").close();
+  const { data, error } = await db.from("sponsorships")
+    .insert({ week_date: addWeek.week_date, sponsor_name, dedication, user_id: me.id }).select("id").single();
+  if (error) return toast("That did not save. " + (error.message || ""), "err");
+  act(db.from("sponsorships").update({ status: "confirmed" }).eq("id", data.id), "Sponsor added. It now shows on the main page.");
+});
+
+$("rsvp-week").addEventListener("change", renderRsvps);
+$("add-week").onclick = () => $("weeks").append(weekForm(null));
+// Tabs
+const tabs = [...document.querySelectorAll(".tabs button")];
+function show(name) {
+  tabs.forEach(b => { const on = b.dataset.tab === name; b.setAttribute("aria-selected", on); $("tab-" + b.dataset.tab).hidden = !on; });
+  try { sessionStorage.setItem("dorldor-admin-tab", name); } catch {}
+}
+tabs.forEach(b => b.addEventListener("click", () => show(b.dataset.tab)));
+let startTab = "sponsors";
+try { startTab = sessionStorage.getItem("dorldor-admin-tab") || startTab; } catch {}
+show(tabs.some(b => b.dataset.tab === startTab) ? startTab : "sponsors");
+
+function gate(text) { $("gate").textContent = text; $("gate").hidden = false; }
+$("signout").onclick = async () => { await Auth.signOut(); location.href = "index.html"; };
+
+(async () => {
+  try {
+    me = await Auth.user();
+    if (!me) { location.replace("signin.html?next=admin"); return; }
+    db = await Auth.client();
+    // Only organizers can read this table, so a row coming back means "you are one".
+    const { data } = await db.from("organizers").select("user_id").eq("user_id", me.id).maybeSingle();
+    if (!data) { gate("This page is for organizers only."); $("gate").append(document.createElement("br"), Object.assign(el("a", null, "← Back to Dor L'Dor"), { href: "index.html" })); return; }
+    $("hello").textContent = "Shalom, " + Auth.displayName(me).split(" ")[0] + "!";
+    await load();
+    $("content").hidden = false;
+  } catch { gate("Sorry — this page could not be loaded. Please try again."); }
+})();
+</script>
+</body>
+</html>
