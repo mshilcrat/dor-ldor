@@ -127,9 +127,9 @@
   const homeUrl = new URL("index.html", location.href).href;
   const here = new URL("signin.html", location.href).href;
   const remember = () => { try { sessionStorage.setItem("dorldor-next", section); } catch {} };
-  const toProfile = next === "profile";
-  const goHome = () => { location.replace(toProfile ? new URL("profile.html", location.href).href
-                                                    : homeUrl + (section ? "#" + section : "")); };
+  const toPage = next === "profile" ? "profile.html" : next === "admin" ? "admin.html" : "";
+  const goHome = () => { location.replace(toPage ? new URL(toPage, location.href).href
+                                                 : homeUrl + (section ? "#" + section : "")); };
 
   function show(view) {
     ["entry", "f-forgot", "f-newpass"].forEach(id => $(id).hidden = id !== view);
