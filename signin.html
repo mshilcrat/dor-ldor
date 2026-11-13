@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sign in – Dor L'Dor</title>
 <style>
+  @font-face{font-family:"Fredoka";font-weight:300 700;font-display:swap;
+    src:url(fonts/fredoka-latin-wght-normal.woff2) format("woff2");
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2190-2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:"Fredoka";font-weight:300 700;font-display:swap;
+    src:url(fonts/fredoka-hebrew-wght-normal.woff2) format("woff2");
+    unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
   :root{--navy:#14224f;--pink:#d81b60;--yellow:#ffc928;--teal:#149aa3;--sky:#e3f4ff;--muted:#5a6485}
   *{box-sizing:border-box}
   [hidden]{display:none!important}
@@ -14,7 +20,8 @@
   main{width:100%;max-width:420px;text-align:center}
   .kicker{display:inline-block;background:var(--navy);color:#fff;font-weight:700;font-size:12px;
     letter-spacing:.08em;padding:6px 16px;border-radius:999px}
-  h1{font-family:"Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;font-size:clamp(44px,14vw,68px);
+  h1,h2,button,.kicker,.heb{font-family:"Fredoka","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif}
+  h1{font-size:clamp(44px,14vw,68px);
     line-height:1;margin:14px 0 4px;text-shadow:0 4px 0 #fff,0 8px 18px rgba(20,34,79,.25)}
   h1 span{color:var(--pink)}
   .heb{font-size:28px;font-weight:700}

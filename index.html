@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dor L'Dor – Avos U'Banim | Mill Basin</title>
 <style>
+  @font-face{font-family:"Fredoka";font-weight:300 700;font-display:swap;
+    src:url(fonts/fredoka-latin-wght-normal.woff2) format("woff2");
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2190-2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:"Fredoka";font-weight:300 700;font-display:swap;
+    src:url(fonts/fredoka-hebrew-wght-normal.woff2) format("woff2");
+    unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
   :root{
     --navy:#14224f; --pink:#d81b60; --yellow:#ffc928; --teal:#149aa3;
     --sky:#e3f4ff; --white:#fff; --ink:#1b2440; --muted:#5a6485;
@@ -13,8 +19,9 @@
   [hidden]{display:none!important}
   html{scroll-behavior:smooth}
   body{margin:0;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:var(--ink);
-    background:linear-gradient(180deg,#bfe6ff 0,var(--sky) 320px,#fff7d6 100%);line-height:1.5}
-  h1,h2,h3{font-family:"Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;margin:0;text-wrap:balance}
+    background:linear-gradient(180deg,var(--sky) 0,#eef8ff 55%,#fff3c0 100%);line-height:1.5}
+  h1,h2,h3,button,.btn,.pill,.kicker,.heb,.tag,nav a,.place,.raffle,.menu div,.thanks strong{font-family:"Fredoka","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif}
+  h1,h2,h3{margin:0;text-wrap:balance}
   a{color:inherit}
   .wrap{max-width:860px;margin:0 auto;padding:0 16px}
 
@@ -25,27 +32,59 @@
   nav a.auth{background:var(--pink)}
   nav a:hover,nav a:focus-visible{background:var(--yellow);color:var(--navy);outline:none}
 
-  header{text-align:center;padding:36px 0 8px}
+  .hero{position:relative;overflow:hidden;padding-bottom:34px;background:
+      radial-gradient(ellipse at 50% 42%,rgba(255,255,255,.96) 0,rgba(255,255,255,.55) 34%,rgba(255,255,255,0) 68%),
+      repeating-conic-gradient(from 0deg at 50% 42%,#b9e3ff 0 6deg,#9ed6fb 6deg 12deg)}
+  .hero::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:46px;background:var(--sky);
+    border-radius:50% 50% 0 0/100% 100% 0 0}
+  header{position:relative;z-index:1;text-align:center;padding:30px 0 8px}
+  .title{position:relative;display:inline-block}
+  .burst{position:absolute;top:8%;width:clamp(34px,7vw,74px);height:auto}
+  .burst.l{right:100%;margin-right:4px} .burst.r{left:100%;margin-left:4px;transform:scaleX(-1)}
+  .scene{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:center;
+    gap:clamp(10px,4vw,40px);margin:18px auto 0;line-height:1}
+  .scene .side{font-size:clamp(46px,11vw,96px);filter:drop-shadow(0 6px 6px rgba(20,34,79,.25))}
+  .scene .pizza{transform:rotate(-14deg)} .scene .prize{transform:rotate(8deg)}
+  .scene .gift{font-size:.62em;margin-left:-.25em}
+  .scene .book{width:clamp(120px,26vw,200px);aspect-ratio:1;border-radius:50%;background:#fff;
+    border:6px solid var(--navy);box-shadow:0 8px 0 var(--yellow),0 16px 26px rgba(20,34,79,.25);
+    display:grid;place-items:center;font-size:clamp(62px,14vw,108px)}
+  .star{position:absolute;z-index:1;font-size:clamp(18px,3.4vw,34px);line-height:1}
+  .ribbon{position:relative;z-index:2;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 14px;
+    width:fit-content;max-width:calc(100% - 28px);margin:22px auto 0;background:var(--navy);color:#fff;
+    font-family:"Fredoka",system-ui,sans-serif;font-weight:700;font-size:clamp(15px,2.6vw,22px);letter-spacing:.06em;
+    padding:10px 24px;border-radius:999px;border:4px solid #fff;box-shadow:0 6px 16px rgba(20,34,79,.3)}
+  .ribbon i{font-style:normal;color:var(--yellow)}
   .kicker{display:inline-block;background:var(--navy);color:#fff;font-weight:700;font-size:13px;
     letter-spacing:.08em;padding:6px 18px;border-radius:999px}
   .kicker i{color:var(--yellow);font-style:normal;margin:0 8px}
-  h1{font-size:clamp(52px,13vw,104px);line-height:1;margin-top:14px;color:var(--navy);
-    text-shadow:0 4px 0 #fff,0 8px 18px rgba(20,34,79,.25)}
+  h1{font-size:clamp(44px,14.5vw,140px);font-weight:700;line-height:.95;margin-top:14px;color:var(--navy);
+    -webkit-text-stroke:clamp(8px,1.6vw,16px) #fff;paint-order:stroke fill;letter-spacing:.01em;
+    filter:drop-shadow(0 6px 0 rgba(20,34,79,.16)) drop-shadow(0 12px 14px rgba(20,34,79,.22))}
   h1 span{color:var(--pink)}
-  .heb{font-size:clamp(28px,6vw,44px);font-weight:700;color:var(--navy);margin-top:6px}
-  .sub{font-weight:700;color:var(--navy)}
+  .heb{font-size:clamp(30px,6.5vw,50px);font-weight:700;color:var(--navy);margin-top:2px}
+  .sub{font-weight:700;color:var(--navy);font-size:clamp(15px,2.4vw,19px)}
 
   section{padding:28px 0;scroll-margin-top:104px}
-  h2{font-size:28px;color:var(--navy);margin-bottom:14px}
-  .card{background:#fff;border-radius:20px;padding:22px;box-shadow:0 6px 20px rgba(20,34,79,.12)}
+  h2{display:inline-block;font-size:22px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#fff;
+    background:var(--navy);padding:8px 22px;border-radius:999px;margin-bottom:14px;box-shadow:0 4px 0 var(--yellow)}
+  h2 span{color:var(--yellow)!important}
+  .card{background:#fff;border-radius:24px;padding:22px;border:4px solid #fff;
+    box-shadow:0 0 0 3px #cfe6f7,0 10px 24px rgba(20,34,79,.14)}
+  .shout{text-align:center;font-family:"Fredoka",system-ui,sans-serif;font-weight:700;line-height:1.02;
+    padding:6px 0 18px;margin-bottom:8px;border-bottom:2px dashed #dbe3f5}
+  .shout .s1{font-size:clamp(34px,8.6vw,66px);color:var(--navy)}
+  .shout .s2{font-size:clamp(30px,7.6vw,58px);color:var(--pink)}
 
   .when{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:14px}
-  .pill{font-weight:800;font-size:20px;color:#fff;padding:10px 22px;border-radius:999px}
+  .pill{font-weight:700;font-size:clamp(20px,3.6vw,26px);color:#fff;padding:9px 24px;border-radius:999px;
+    border:3px solid #fff;box-shadow:0 4px 10px rgba(20,34,79,.25)}
   .pill.date{background:var(--navy)} .pill.time{background:var(--teal)}
   .tonight{text-align:center}
-  .tonight .flag{display:inline-block;background:var(--yellow);color:var(--navy);font-weight:800;
-    padding:4px 18px;border-radius:999px;letter-spacing:.05em;margin-bottom:8px}
-  .place{font-weight:800;font-size:20px;color:var(--navy)}
+  .tonight .flag{display:inline-block;background:var(--yellow);color:var(--navy);font-weight:700;font-size:20px;
+    font-family:"Fredoka",system-ui,sans-serif;padding:5px 22px;border-radius:999px;letter-spacing:.05em;margin-bottom:8px;
+    box-shadow:0 3px 0 rgba(20,34,79,.18)}
+  .place{font-weight:600;font-size:clamp(20px,3.4vw,26px);color:var(--navy);line-height:1.25}
   .invite{margin-top:12px;font-weight:700;color:var(--navy)}
 
   .menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
@@ -126,9 +165,12 @@
     section{scroll-margin-top:12px}
     .week button{width:100%}
     .rsvp > div, .rsvp button, #r-kids{width:100%;flex:1 1 100%}
-    h2{font-size:24px}
+    h2{font-size:18px;padding:7px 18px}
   }
-  footer{text-align:center;padding:26px 16px 40px;font-weight:800;color:var(--navy)}
+  footer{text-align:center;margin-top:20px;padding:30px 16px 36px;color:var(--navy);
+    background:var(--yellow);border-radius:50% 50% 0 0/40px 40px 0 0}
+  footer .cheer{font-family:"Fredoka",system-ui,sans-serif;font-weight:700;font-size:clamp(20px,4.2vw,30px);line-height:1.2}
+  footer small{display:block;margin-top:10px;font-weight:700;font-size:14px}
 </style>
 </head>
 <body>
@@ -145,12 +187,30 @@
   <a href="signin.html" id="nav-auth" class="auth">Sign in</a>
 </div></nav>
 
-<header class="wrap">
-  <div class="kicker">MILL BASIN<i>●</i>MOTZAI SHABBAT LEARNING<i>●</i>2026</div>
-  <h1>DOR <span>L'DOR</span></h1>
-  <div class="heb" lang="he" dir="rtl">אבות ובנים</div>
-  <div class="sub">Avos U'Banim &nbsp;|&nbsp; Learning program for kids</div>
-</header>
+<div class="hero">
+  <span class="star" style="left:6%;top:16%;color:#ffc928" aria-hidden="true">★</span>
+  <span class="star" style="left:14%;top:58%;color:#3b8fe8" aria-hidden="true">★</span>
+  <span class="star" style="left:24%;top:80%;color:#d81b60" aria-hidden="true">★</span>
+  <span class="star" style="right:7%;top:20%;color:#3b8fe8" aria-hidden="true">★</span>
+  <span class="star" style="right:15%;top:52%;color:#d81b60" aria-hidden="true">★</span>
+  <span class="star" style="right:25%;top:82%;color:#ffc928" aria-hidden="true">★</span>
+  <header class="wrap">
+    <div class="kicker">MILL BASIN<i>●</i>MOTZAI SHABBAT LEARNING<i>●</i>2026</div>
+    <div><div class="title">
+      <svg class="burst l" viewBox="0 0 60 70" aria-hidden="true"><g stroke="#ffc928" stroke-width="9" stroke-linecap="round"><path d="M8 10 44 26M6 38h36M12 64l32-14"/></g></svg>
+      <h1>DOR <span>L'DOR</span></h1>
+      <svg class="burst r" viewBox="0 0 60 70" aria-hidden="true"><g stroke="#ffc928" stroke-width="9" stroke-linecap="round"><path d="M8 10 44 26M6 38h36M12 64l32-14"/></g></svg>
+    </div></div>
+    <div class="heb" lang="he" dir="rtl">אבות ובנים</div>
+    <div class="sub">Avos U'Banim &nbsp;|&nbsp; Learning program for kids</div>
+  </header>
+  <div class="scene" aria-hidden="true">
+    <span class="side pizza">🍕</span>
+    <span class="book">📖</span>
+    <span class="side prize">🏆<span class="gift">🎁</span></span>
+  </div>
+  <div class="ribbon"><i>★</i>PIZZA<i>●</i>SNACKS<i>●</i>STORYTELLER<i>●</i>PRIZES<i>★</i></div>
+</div>
 
 <main class="wrap">
 
@@ -199,6 +259,7 @@
   <section id="sponsor">
     <h2>Sponsor a Week <span style="color:var(--pink)">●</span> Dedicate the Learning</h2>
     <div class="card">
+      <div class="shout" id="shout" hidden><div class="s1">NO SPONSOR YET!</div><div class="s2">WILL YOU SPONSOR THIS WEEK?</div></div>
       <div id="weeks"></div>
       <p class="note">Tap an open week to reserve it. Your request is sent by text to the organizer, who confirms and marks the week as sponsored.</p>
     </div>
@@ -240,7 +301,10 @@
 
 </main>
 
-<footer>Dor L'Dor · Cong. Zichron R' Moshe Feinstein · 6315 Strickland Avenue</footer>
+<footer>
+  <div class="cheer">Bring a friend, chavruta, parent or relative!<br>Just come—let's fill the room!</div>
+  <small>Dor L'Dor · Cong. Zichron R' Moshe Feinstein · 6315 Strickland Avenue</small>
+</footer>
 
 <dialog id="dlg" aria-labelledby="dlg-title">
   <form method="dialog" id="dlg-form">
@@ -391,6 +455,7 @@ function renderWeeks(boxId, kind) {
   });
 }
 renderWeeks("weeks", "sponsor");
+$("shout").hidden = !(upcoming.length && !current.sponsor);
 renderWeeks("stories", "story");
 
 // Thank-you wall: every sponsored week, past and upcoming, newest first
