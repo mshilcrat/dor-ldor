@@ -29,6 +29,7 @@
   nav .wrap{display:flex;gap:4px;overflow-x:auto;padding-top:8px;padding-bottom:8px}
   nav a{color:#fff;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.04em;
     text-transform:uppercase;padding:8px 14px;border-radius:999px;white-space:nowrap}
+  nav a.auth{background:var(--pink)}
   nav a:hover,nav a:focus-visible{background:var(--yellow);color:var(--navy);outline:none}
 
   .hero{position:relative;overflow:hidden;padding-bottom:34px;background:
@@ -169,6 +170,8 @@
   <a href="#wall">Our Sponsors</a>
   <a href="#story">Tell a Story</a>
   <a href="#pay">Pay by Zelle</a>
+  <a href="profile.html" id="nav-profile" hidden>My profile</a>
+  <a href="signin.html" id="nav-auth" class="auth">Sign in</a>
 </div></nav>
 
 <div class="hero">
@@ -198,7 +201,8 @@
   <section id="raffle-promo">
     <div class="raffle promo">
       <div>🎟️ Sign up to tell a story and earn an <strong>extra ticket</strong> for the end-of-season <strong>Special Super Mega Raffle!</strong></div>
-      <div class="promo-cta"><a class="btn btn-navy" id="promo-btn" href="#story">Sign up to tell a story</a></div>
+      <div class="promo-cta"><span id="promo-note"></span>
+        <a class="btn btn-navy" id="promo-btn" href="signin.html?next=%23story">Log in to sign up</a></div>
     </div>
   </section>
 
@@ -236,7 +240,7 @@
     <div class="card">
       <div class="shout" id="shout" hidden><div class="s1">NO SPONSOR YET!</div><div class="s2">WILL YOU SPONSOR THIS WEEK?</div></div>
       <div id="weeks"></div>
-      <p class="note" id="sponsor-note">Tap an open week to reserve it. Your request is sent by text to the organizer, who confirms and marks the week as sponsored.</p>
+      <p class="note" id="sponsor-note">Log in, then tap an open week to reserve it. Your request is sent by text to the organizer, who confirms and marks the week as sponsored.</p>
     </div>
   </section>
 
@@ -251,7 +255,7 @@
       <div class="raffle">🎟️ Sign up to tell a story and earn an <strong>extra ticket</strong> for the end-of-season <strong>Special Super Mega Raffle!</strong></div>
       <div id="stories"></div>
       <div class="raffle" id="story-thanks" role="status" hidden></div>
-      <p class="note">Tap an open week and enter your name and phone number. An organizer will confirm with you.</p>
+      <p class="note">Log in, then tap an open week and enter your name and phone number. An organizer will confirm with you.</p>
     </div>
   </section>
 
@@ -302,6 +306,7 @@
   </form>
 </dialog>
 
+<script src="auth.js"></script>
 <script>
 /* ============================================================
    EDIT HERE — everything on the page is driven by this block.
@@ -363,7 +368,7 @@ $("info-date").textContent = "📅 " + longDate(current.date);
 if (current.time) $("info-time").textContent = "🕒 " + current.time; else $("info-time").remove();
 
 // Week lists: sponsorship spots and storyteller spots
-let chosen = null, mode = "sponsor";
+let chosen = null, mode = "sponsor", me = null;
 // Storyteller sign-ups: sent to the Google Form in CONFIG when it is set.
 const STORE = "dorldor-storyteller-signups";
 function localSignups() {
@@ -412,12 +417,16 @@ function renderWeeks(boxId, kind) {
       if (kind === "sponsor" && w.dedication) f.append(el("small", null, w.dedication));
       row.append(f);
     } else {
-      const label = kind === "sponsor"
+      const label = !me
+        ? (kind === "sponsor" ? "Sign in to sponsor this week" : "Sign in to tell the story")
+        : kind === "sponsor"
           ? (i === 0 ? "No sponsor yet — sponsor this week" : "Open — sponsor this week")
           : "Sign me up! I am happy to tell the story";
       const b = el("button", kind === "sponsor" ? "btn-pink" : "btn-navy", label);
       b.type = "button";
       b.addEventListener("click", () => {
+        if (needSignIn(kind === "sponsor" ? "#sponsor" : "#story")) return;
+        if (me && !$("f-name").value) $("f-name").value = Auth.displayName(me);
         chosen = w; mode = kind;
         $("dlg-title").textContent = kind === "sponsor" ? "Sponsor this week" : "Tell the story this week";
         $("f-ded-wrap").hidden = kind !== "sponsor";
@@ -533,6 +542,7 @@ $("rsvp-form").addEventListener("submit", async e => {
     thanks.textContent = "🍕 Thank you, " + name + "! We are counting on " + kids + (kids === 1 ? " kid" : " kids") +
       " for Motzai Shabbat, " + longDate(current.date) + ". See you there!";
     $("rsvp-form").reset();
+    if (me) $("r-name").value = Auth.displayName(me);
   } catch {
     thanks.textContent = "Sorry — that did not go through. Please just come, or speak with an organizer.";
   }
@@ -541,6 +551,34 @@ $("rsvp-form").addEventListener("submit", async e => {
 
 $("dlg-close").addEventListener("click", () => $("dlg").close());
 
+// Sign-in (settings are in auth.js). Sponsoring and story sign-up require
+// sign-in; RSVP is open to everyone.
+function needSignIn(hash) {
+  if (me) return false;
+  location.href = "signin.html?next=" + encodeURIComponent(hash);
+  return true;
+}
+Auth.user().then(u => {
+  me = u;
+  if (!u) return;
+  const name = Auth.displayName(u), a = $("nav-auth");
+  a.textContent = "Sign out (" + name.split(" ")[0] + ")";
+  a.href = "#";
+  a.addEventListener("click", async e => { e.preventDefault(); await Auth.signOut(); location.reload(); });
+  $("r-name").value = name;
+  $("nav-profile").hidden = false;
+  if (Auth.phoneOf(u)) $("f-phone").value = Auth.phoneOf(u);
+  renderWeeks("weeks", "sponsor");
+  renderWeeks("stories", "story");
+  $("promo-note").textContent = "You're logged in.";
+  $("promo-btn").textContent = "Sign up to tell a story";
+  $("promo-btn").href = "#story";
+  try {
+    const next = sessionStorage.getItem("dorldor-next");
+    sessionStorage.removeItem("dorldor-next");
+    if (next && $(next)) $(next).scrollIntoView();
+  } catch {}
+}).catch(() => {});
 </script>
 </body>
 </html>
