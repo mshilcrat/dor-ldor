@@ -239,7 +239,7 @@
     <div class="card">
       <div class="shout" id="shout" hidden><div class="s1">NO SPONSOR YET!</div><div class="s2">WILL YOU SPONSOR THIS WEEK?</div></div>
       <div id="weeks"></div>
-      <p class="note">Log in, then tap an open week to reserve it. Your request is sent by text to the organizer, who confirms and marks the week as sponsored.</p>
+      <p class="note" id="sponsor-note">Log in, then tap an open week to reserve it. Your request is sent by text to the organizer, who confirms and marks the week as sponsored.</p>
     </div>
   </section>
 
@@ -398,7 +398,8 @@ function renderWeeks(boxId, kind) {
   if (!shown.length) {
     const done = el("div", "all-taken", "🎉 Every week is sponsored — thank you! ");
     const a = el("a", null, "See our sponsors"); a.href = "#wall";
-    done.append(a); box.append(done); return;
+    done.append(a); box.append(done);
+    $("sponsor-note").hidden = true; return;
   }
   shown.forEach(w => {
     const i = weeks.indexOf(w);
