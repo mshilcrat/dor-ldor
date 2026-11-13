@@ -171,6 +171,7 @@
   <a href="#story">Tell a Story</a>
   <a href="#pay">Pay by Zelle</a>
   <a href="profile.html" id="nav-profile" hidden>My profile</a>
+  <a href="admin.html" id="nav-admin" hidden>Organizers</a>
   <a href="signin.html" id="nav-auth" class="auth">Sign in</a>
 </div></nav>
 
@@ -567,6 +568,9 @@ Auth.user().then(u => {
   a.addEventListener("click", async e => { e.preventDefault(); await Auth.signOut(); location.reload(); });
   $("r-name").value = name;
   $("nav-profile").hidden = false;
+  // Only organizers can read the organizers table, so a row back means "show the link".
+  Auth.client().then(c => c.from("organizers").select("user_id").eq("user_id", u.id).maybeSingle())
+    .then(r => { if (r && r.data) $("nav-admin").hidden = false; }).catch(() => {});
   if (Auth.phoneOf(u)) $("f-phone").value = Auth.phoneOf(u);
   renderWeeks("weeks", "sponsor");
   renderWeeks("stories", "story");
