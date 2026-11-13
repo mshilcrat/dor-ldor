@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sign in – Dor L'Dor</title>
+<title>Log in – Dor L'Dor</title>
 <style>
   @font-face{font-family:"Fredoka";font-weight:300 700;font-display:swap;
     src:url(fonts/fredoka-latin-wght-normal.woff2) format("woff2");
@@ -17,24 +17,37 @@
   body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px 16px;
     font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:var(--navy);line-height:1.5;
     background:linear-gradient(180deg,#bfe6ff 0,var(--sky) 50%,#fff7d6 100%)}
-  main{width:100%;max-width:420px;text-align:center}
+  main{width:100%;max-width:440px;text-align:center}
+  h1,h2,button,.kicker,.heb,.tabs button{font-family:"Fredoka","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif}
   .kicker{display:inline-block;background:var(--navy);color:#fff;font-weight:700;font-size:12px;
     letter-spacing:.08em;padding:6px 16px;border-radius:999px}
-  h1,h2,button,.kicker,.heb{font-family:"Fredoka","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif}
-  h1{font-size:clamp(44px,14vw,68px);
-    line-height:1;margin:14px 0 4px;text-shadow:0 4px 0 #fff,0 8px 18px rgba(20,34,79,.25)}
+  h1{font-size:clamp(44px,14vw,68px);line-height:1;margin:14px 0 4px;font-weight:700;
+    -webkit-text-stroke:8px #fff;paint-order:stroke fill;filter:drop-shadow(0 6px 10px rgba(20,34,79,.22))}
   h1 span{color:var(--pink)}
   .heb{font-size:28px;font-weight:700}
-  .card{background:#fff;border-radius:22px;padding:26px 22px;margin-top:22px;box-shadow:0 6px 20px rgba(20,34,79,.14)}
-  h2{font-family:"Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;font-size:24px;margin:0 0 6px}
-  p{margin:0 0 18px;font-weight:700;color:var(--muted)}
-  button,.btn{font:inherit;font-weight:800;border:0;border-radius:999px;padding:14px 22px;cursor:pointer;
-    width:100%;display:block;text-decoration:none}
-  #google{background:var(--navy);color:#fff;font-size:18px}
-  #google:hover{filter:brightness(1.15)}
-  #google:disabled{opacity:.5;cursor:not-allowed}
-  button:focus-visible,a:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
-  .msg{background:#fff3c4;border-radius:14px;padding:12px 14px;margin:16px 0 0;font-weight:700;color:var(--navy)}
+  .card{background:#fff;border-radius:22px;padding:22px;margin-top:20px;box-shadow:0 6px 20px rgba(20,34,79,.14);text-align:left}
+  .tabs{display:flex;background:#eef2fb;border-radius:999px;padding:4px;margin-bottom:16px}
+  .tabs button{flex:1;border:0;background:none;border-radius:999px;padding:10px;font-size:16px;font-weight:700;color:var(--navy);cursor:pointer}
+  .tabs button[aria-selected="true"]{background:var(--navy);color:#fff}
+  h2{font-size:22px;margin:0 0 4px;text-align:center}
+  p.lead{margin:0 0 14px;font-weight:700;color:var(--muted);text-align:center;font-size:15px}
+  label{display:block;font-weight:800;margin:12px 0 4px;font-size:14px}
+  input{width:100%;font:inherit;padding:11px 12px;border:2px solid #cdd6ee;border-radius:12px}
+  input:focus{outline:none;border-color:var(--teal)}
+  .hint{font-size:13px;color:var(--muted);margin-top:4px}
+  button.main,button.google{font:inherit;font-family:"Fredoka",system-ui,sans-serif;font-weight:700;border:0;border-radius:999px;
+    padding:13px 22px;cursor:pointer;width:100%;display:block;font-size:17px;margin-top:16px}
+  button.main{background:var(--pink);color:#fff}
+  button.google{background:#fff;color:var(--navy);border:2px solid #cdd6ee;margin-top:0}
+  button:hover{filter:brightness(1.08)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  button:focus-visible,a:focus-visible,.link:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+  .or{display:flex;align-items:center;gap:10px;color:var(--muted);font-weight:700;font-size:13px;margin:16px 0 2px}
+  .or::before,.or::after{content:"";flex:1;height:2px;background:#e3e8f5}
+  .link{background:none;border:0;padding:0;font:inherit;font-weight:700;color:var(--teal);cursor:pointer;text-decoration:underline;font-size:14px}
+  .row-end{text-align:right;margin-top:8px}
+  .msg{border-radius:14px;padding:12px 14px;margin:14px 0 0;font-weight:700;text-align:center}
+  .msg.info{background:#fff3c4} .msg.ok{background:#d9f5ee} .msg.err{background:#ffe0ea}
   .back{display:inline-block;margin-top:18px;font-weight:800;color:var(--navy)}
 </style>
 </head>
@@ -45,9 +58,61 @@
   <div class="heb" lang="he" dir="rtl">אבות ובנים</div>
 
   <div class="card">
-    <h2>Sign in</h2>
-    <p>Sign in to RSVP, sponsor a week, or sign up to tell a story.</p>
-    <button id="google" type="button">Sign in with Google</button>
+    <!-- Log in / Create account -->
+    <div id="entry">
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" id="tab-login" aria-selected="true">Log in</button>
+        <button type="button" role="tab" id="tab-signup" aria-selected="false">Create account</button>
+      </div>
+      <p class="lead" id="lead">Log in to sponsor a week or sign up to tell a story.</p>
+
+      <button class="google" id="google" type="button">Continue with Google</button>
+      <div class="or">or with email</div>
+
+      <form id="f-login" novalidate>
+        <label for="li-email">Email</label>
+        <input id="li-email" type="email" autocomplete="email" required>
+        <label for="li-pass">Password</label>
+        <input id="li-pass" type="password" autocomplete="current-password" required>
+        <div class="row-end"><button type="button" class="link" id="to-forgot">Forgot password?</button></div>
+        <button class="main" type="submit">Log in</button>
+      </form>
+
+      <form id="f-signup" novalidate hidden>
+        <label for="su-name">Your name</label>
+        <input id="su-name" autocomplete="name" required>
+        <label for="su-email">Email</label>
+        <input id="su-email" type="email" autocomplete="email" required>
+        <label for="su-pass">Choose a password</label>
+        <input id="su-pass" type="password" autocomplete="new-password" minlength="8" required>
+        <div class="hint">At least 8 characters.</div>
+        <label for="su-pass2">Type it again</label>
+        <input id="su-pass2" type="password" autocomplete="new-password" minlength="8" required>
+        <button class="main" type="submit">Create account</button>
+      </form>
+    </div>
+
+    <!-- Forgot password -->
+    <form id="f-forgot" novalidate hidden>
+      <h2>Reset your password</h2>
+      <p class="lead">Enter your email and we will send you a link to choose a new password.</p>
+      <label for="fp-email">Email</label>
+      <input id="fp-email" type="email" autocomplete="email" required>
+      <button class="main" type="submit">Send reset link</button>
+      <div class="row-end" style="text-align:center"><button type="button" class="link" id="fp-back">Back to log in</button></div>
+    </form>
+
+    <!-- New password (after clicking the emailed link) -->
+    <form id="f-newpass" novalidate hidden>
+      <h2>Choose a new password</h2>
+      <label for="np-pass">New password</label>
+      <input id="np-pass" type="password" autocomplete="new-password" minlength="8" required>
+      <div class="hint">At least 8 characters.</div>
+      <label for="np-pass2">Type it again</label>
+      <input id="np-pass2" type="password" autocomplete="new-password" minlength="8" required>
+      <button class="main" type="submit">Save new password</button>
+    </form>
+
     <div class="msg" id="msg" role="status" hidden></div>
   </div>
 
@@ -56,25 +121,109 @@
 
 <script src="auth.js"></script>
 <script>
-  const btn = document.getElementById("google"), msg = document.getElementById("msg");
-  const say = t => { msg.textContent = t; msg.hidden = false; };
+  const $ = id => document.getElementById(id);
+  const msg = $("msg");
+  const say = (t, kind) => { msg.textContent = t; msg.className = "msg " + (kind || "info"); msg.hidden = false; };
+  const quiet = () => { msg.hidden = true; };
 
-  // Where to land after signing in: the main page, at the section the person came from.
-  const next = new URLSearchParams(location.search).get("next") || "";
-  const home = new URL("index.html" + (/^#[a-z]+$/.test(next) ? next : ""), location.href).href;
+  // Where to land afterwards: the main page, at the section the person came from.
+  const params = new URLSearchParams(location.search);
+  const next = params.get("next") || "";
+  const section = /^#[a-z]+$/.test(next) ? next.slice(1) : "";
+  const homeUrl = new URL("index.html", location.href).href;
+  const here = new URL("signin.html", location.href).href;
+  const remember = () => { try { sessionStorage.setItem("dorldor-next", section); } catch {} };
+  const goHome = () => { location.replace(homeUrl + (section ? "#" + section : "")); };
+
+  function show(view) {
+    ["entry", "f-forgot", "f-newpass"].forEach(id => $(id).hidden = id !== view);
+    quiet();
+  }
+  function tab(which) {
+    const signup = which === "signup";
+    $("tab-login").setAttribute("aria-selected", !signup);
+    $("tab-signup").setAttribute("aria-selected", signup);
+    $("f-login").hidden = signup; $("f-signup").hidden = !signup;
+    $("lead").textContent = signup
+      ? "New here? Create an account with your email, or use Google."
+      : "Log in to sponsor a week or sign up to tell a story.";
+    quiet();
+  }
+  $("tab-login").onclick = () => tab("login");
+  $("tab-signup").onclick = () => tab("signup");
+  $("to-forgot").onclick = () => { $("fp-email").value = $("li-email").value; show("f-forgot"); };
+  $("fp-back").onclick = () => show("entry");
+  if (params.get("mode") === "signup") tab("signup");
+
+  // Friendlier wording for the common errors
+  function explain(e) {
+    const m = String(e && e.message || e).toLowerCase();
+    if (m.includes("invalid login")) return "That email and password don't match. Please try again.";
+    if (m.includes("not confirmed")) return "Please confirm your email first — check your inbox for the link we sent.";
+    if (m.includes("already registered") || m.includes("already been registered")) return "An account with this email already exists. Try logging in instead.";
+    if (m.includes("password")) return "Please choose a stronger password (at least 8 characters).";
+    if (m.includes("rate") || m.includes("too many")) return "Too many tries — please wait a minute and try again.";
+    return "Sorry — something went wrong. Please try again.";
+  }
+  const validEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  async function busy(form, fn) {
+    const b = form.querySelector("button[type=submit]"); b.disabled = true;
+    try { await fn(); } finally { b.disabled = false; }
+  }
 
   if (!Auth.configured) {
-    btn.disabled = true;
-    say("Sign-in is not switched on yet. Everything on the main page works without an account for now.");
+    document.querySelectorAll("#entry button.main, #google, #f-forgot button.main").forEach(b => b.disabled = true);
+    say("Log-in is not switched on yet. Everything else on the main page works for now.");
   } else {
-    Auth.user().then(u => { if (u) location.replace(home); }).catch(() => {});
-    btn.addEventListener("click", async () => {
-      btn.disabled = true;
-      // Google returns to the plain main page; the section is remembered here.
-      try { sessionStorage.setItem("dorldor-next", home.split("#")[1] || ""); } catch {}
-      try { await Auth.signInWithGoogle(home.split("#")[0]); }
-      catch { btn.disabled = false; say("Sorry — sign-in did not start. Please try again."); }
-    });
+    let recovering = params.get("reset") === "1";
+    Auth.onRecovery(() => { recovering = true; show("f-newpass"); });
+    Auth.user().then(u => {
+      if (!u) return;
+      if (recovering) show("f-newpass"); else goHome();
+    }).catch(() => {});
+
+    $("google").onclick = async () => {
+      $("google").disabled = true; remember();
+      try { await Auth.signInWithGoogle(homeUrl); }
+      catch (e) { $("google").disabled = false; say(explain(e), "err"); }
+    };
+
+    $("f-login").onsubmit = e => { e.preventDefault(); const f = e.target; busy(f, async () => {
+      const email = $("li-email").value.trim(), pass = $("li-pass").value;
+      if (!validEmail(email) || !pass) return say("Please enter your email and password.", "err");
+      try { await Auth.signInWithEmail(email, pass); remember(); goHome(); }
+      catch (err) { say(explain(err), "err"); }
+    }); };
+
+    $("f-signup").onsubmit = e => { e.preventDefault(); const f = e.target; busy(f, async () => {
+      const name = $("su-name").value.trim(), email = $("su-email").value.trim();
+      const p1 = $("su-pass").value, p2 = $("su-pass2").value;
+      if (!name) return say("Please enter your name.", "err");
+      if (!validEmail(email)) return say("Please enter a valid email address.", "err");
+      if (p1.length < 8) return say("Your password needs at least 8 characters.", "err");
+      if (p1 !== p2) return say("The two passwords don't match.", "err");
+      try {
+        remember();
+        const signedIn = await Auth.signUpWithEmail(name, email, p1, homeUrl);
+        if (signedIn) goHome();
+        else { f.reset(); say("Almost done! We sent a confirmation link to " + email + ". Click it to finish creating your account.", "ok"); }
+      } catch (err) { say(explain(err), "err"); }
+    }); };
+
+    $("f-forgot").onsubmit = e => { e.preventDefault(); const f = e.target; busy(f, async () => {
+      const email = $("fp-email").value.trim();
+      if (!validEmail(email)) return say("Please enter a valid email address.", "err");
+      try { await Auth.sendPasswordReset(email, here + "?reset=1"); say("If an account exists for " + email + ", a reset link is on its way.", "ok"); }
+      catch (err) { say(explain(err), "err"); }
+    }); };
+
+    $("f-newpass").onsubmit = e => { e.preventDefault(); const f = e.target; busy(f, async () => {
+      const p1 = $("np-pass").value, p2 = $("np-pass2").value;
+      if (p1.length < 8) return say("Your password needs at least 8 characters.", "err");
+      if (p1 !== p2) return say("The two passwords don't match.", "err");
+      try { await Auth.setNewPassword(p1); say("Your password is updated. Taking you back…", "ok"); setTimeout(goHome, 1200); }
+      catch (err) { say(explain(err), "err"); }
+    }); };
   }
 </script>
 </body>

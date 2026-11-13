@@ -43,10 +43,46 @@ const Auth = (() => {
     if (c) await c.auth.signOut();
   }
 
+  // Email + password
+  async function signUpWithEmail(name, email, password, returnTo) {
+    const c = await client();
+    if (!c) throw new Error("Sign-in is not connected yet");
+    const { data, error } = await c.auth.signUp({ email, password,
+      options: { data: { full_name: name }, emailRedirectTo: returnTo } });
+    if (error) throw error;
+    return !!(data && data.session);           // false = must confirm email first
+  }
+
+  async function signInWithEmail(email, password) {
+    const c = await client();
+    if (!c) throw new Error("Sign-in is not connected yet");
+    const { error } = await c.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  }
+
+  async function sendPasswordReset(email, returnTo) {
+    const c = await client();
+    if (!c) throw new Error("Sign-in is not connected yet");
+    const { error } = await c.auth.resetPasswordForEmail(email, { redirectTo: returnTo });
+    if (error) throw error;
+  }
+
+  async function setNewPassword(password) {
+    const c = await client();
+    const { error } = await c.auth.updateUser({ password });
+    if (error) throw error;
+  }
+
+  async function onRecovery(fn) {
+    const c = await client();
+    if (c) c.auth.onAuthStateChange(e => { if (e === "PASSWORD_RECOVERY") fn(); });
+  }
+
   function displayName(u) {
     const m = (u && u.user_metadata) || {};
     return m.full_name || m.name || (u && u.email) || "";
   }
 
-  return { configured, client, user, signInWithGoogle, signOut, displayName };
+  return { configured, client, user, signInWithGoogle, signOut, displayName,
+           signUpWithEmail, signInWithEmail, sendPasswordReset, setNewPassword, onRecovery };
 })();
