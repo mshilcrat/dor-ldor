@@ -78,11 +78,23 @@ const Auth = (() => {
     if (c) c.auth.onAuthStateChange(e => { if (e === "PASSWORD_RECOVERY") fn(); });
   }
 
+  // Profile details live on the account itself (name + phone).
+  async function updateProfile(name, phone) {
+    const c = await client();
+    if (!c) throw new Error("Sign-in is not connected yet");
+    const { data, error } = await c.auth.updateUser({ data: { full_name: name, phone } });
+    if (error) throw error;
+    return data && data.user;
+  }
+
+  function phoneOf(u) { return ((u && u.user_metadata) || {}).phone || ""; }
+
   function displayName(u) {
     const m = (u && u.user_metadata) || {};
     return m.full_name || m.name || (u && u.email) || "";
   }
 
   return { configured, client, user, signInWithGoogle, signOut, displayName,
-           signUpWithEmail, signInWithEmail, sendPasswordReset, setNewPassword, onRecovery };
+           signUpWithEmail, signInWithEmail, sendPasswordReset, setNewPassword, onRecovery,
+           updateProfile, phoneOf };
 })();

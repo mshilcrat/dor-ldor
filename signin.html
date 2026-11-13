@@ -133,7 +133,9 @@
   const homeUrl = new URL("index.html", location.href).href;
   const here = new URL("signin.html", location.href).href;
   const remember = () => { try { sessionStorage.setItem("dorldor-next", section); } catch {} };
-  const goHome = () => { location.replace(homeUrl + (section ? "#" + section : "")); };
+  const toProfile = next === "profile";
+  const goHome = () => { location.replace(toProfile ? new URL("profile.html", location.href).href
+                                                    : homeUrl + (section ? "#" + section : "")); };
 
   function show(view) {
     ["entry", "f-forgot", "f-newpass"].forEach(id => $(id).hidden = id !== view);
@@ -184,7 +186,7 @@
 
     $("google").onclick = async () => {
       $("google").disabled = true; remember();
-      try { await Auth.signInWithGoogle(homeUrl); }
+      try { await Auth.signInWithGoogle(toProfile ? new URL("profile.html", location.href).href : homeUrl); }
       catch (e) { $("google").disabled = false; say(explain(e), "err"); }
     };
 

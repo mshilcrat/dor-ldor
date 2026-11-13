@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My profile – Dor L'Dor</title>
+<style>
+  @font-face{font-family:"Fredoka";font-weight:300 700;font-display:swap;
+    src:url(fonts/fredoka-latin-wght-normal.woff2) format("woff2");
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2190-2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:"Fredoka";font-weight:300 700;font-display:swap;
+    src:url(fonts/fredoka-hebrew-wght-normal.woff2) format("woff2");
+    unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+  :root{--navy:#14224f;--pink:#d81b60;--yellow:#ffc928;--teal:#149aa3;--sky:#e3f4ff;--muted:#5a6485}
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;min-height:100vh;padding:20px 16px 40px;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;
+    color:var(--navy);line-height:1.5;background:linear-gradient(180deg,#bfe6ff 0,var(--sky) 40%,#fff7d6 100%)}
+  main{max-width:640px;margin:0 auto}
+  h1,h2,button,.kicker,.tickets b,.btn{font-family:"Fredoka","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif}
+  .top{text-align:center}
+  .kicker{display:inline-block;background:var(--navy);color:#fff;font-weight:700;font-size:12px;letter-spacing:.08em;padding:6px 16px;border-radius:999px}
+  h1{font-size:clamp(36px,9vw,54px);line-height:1.05;margin:12px 0 2px;font-weight:700;
+    -webkit-text-stroke:7px #fff;paint-order:stroke fill;filter:drop-shadow(0 6px 10px rgba(20,34,79,.2))}
+  .hello{font-weight:700;color:var(--muted);margin:0}
+  .card{background:#fff;border-radius:22px;padding:22px;margin-top:20px;box-shadow:0 6px 20px rgba(20,34,79,.14)}
+  h2{display:table;margin:0 auto 14px;font-size:18px;letter-spacing:.04em;text-transform:uppercase;color:#fff;
+    background:var(--navy);padding:7px 20px;border-radius:999px;box-shadow:0 4px 0 var(--yellow)}
+  label{display:block;font-weight:800;margin:12px 0 4px;font-size:14px}
+  input{width:100%;font:inherit;padding:11px 12px;border:2px solid #cdd6ee;border-radius:12px}
+  input:focus{outline:none;border-color:var(--teal)}
+  input[readonly]{background:#f2f5fb;color:var(--muted)}
+  .hint{font-size:13px;color:var(--muted);margin-top:4px}
+  button,.btn{font:inherit;font-family:"Fredoka",system-ui,sans-serif;font-weight:700;border:0;border-radius:999px;
+    padding:12px 22px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+  .save{background:var(--pink);color:#fff;width:100%;margin-top:16px;font-size:17px}
+  .ghost{background:#eef2fb;color:var(--navy)}
+  button:hover,.btn:hover{filter:brightness(1.08)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  button:focus-visible,a:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+  .tickets{display:flex;align-items:center;gap:14px;background:var(--yellow);border-radius:18px;padding:16px 18px}
+  .tickets b{font-size:46px;line-height:1}
+  .tickets span{font-weight:700}
+  ul.list{list-style:none;margin:0;padding:0}
+  ul.list li{padding:12px 0;border-bottom:2px dashed #dbe3f5;font-weight:700}
+  ul.list li:last-child{border-bottom:0}
+  ul.list small{display:block;color:var(--muted);font-weight:600}
+  .empty{color:var(--muted);font-weight:700;text-align:center;margin:4px 0}
+  .empty a{color:var(--pink)}
+  .msg{border-radius:14px;padding:12px 14px;margin:14px 0 0;font-weight:700;text-align:center}
+  .msg.info{background:#fff3c4} .msg.ok{background:#d9f5ee} .msg.err{background:#ffe0ea}
+  .foot{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:22px}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div class="kicker">DOR L'DOR · AVOS U'BANIM</div>
+    <h1>My Profile</h1>
+    <p class="hello" id="hello"></p>
+  </div>
+
+  <div class="msg info" id="gate" hidden></div>
+
+  <div id="content" hidden>
+    <div class="card">
+      <h2>My details</h2>
+      <form id="f-profile" novalidate>
+        <label for="p-name">Name</label>
+        <input id="p-name" autocomplete="name" required>
+        <label for="p-phone">Phone number</label>
+        <input id="p-phone" type="tel" inputmode="tel" autocomplete="tel">
+        <div class="hint">Used to fill in your story sign-ups, so organizers can reach you.</div>
+        <label for="p-email">Email</label>
+        <input id="p-email" type="email" readonly>
+        <div class="hint">This is the email you log in with.</div>
+        <button class="save" type="submit">Save my details</button>
+        <div class="msg" id="msg" role="status" hidden></div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Raffle tickets</h2>
+      <div class="tickets"><b id="tickets">0</b>
+        <span>extra ticket(s) for the end-of-season Special Super Mega Raffle — one for each story you sign up to tell.</span></div>
+    </div>
+
+    <div class="card">
+      <h2>My story sign-ups</h2>
+      <ul class="list" id="stories"></ul>
+    </div>
+
+    <div class="card">
+      <h2>My sponsorships</h2>
+      <ul class="list" id="sponsorships"></ul>
+    </div>
+
+    <div class="foot">
+      <a class="btn ghost" href="index.html">← Back to Dor L'Dor</a>
+      <button class="ghost" type="button" id="signout">Log out</button>
+    </div>
+  </div>
+</main>
+
+<script src="auth.js"></script>
+<script>
+  const $ = id => document.getElementById(id);
+  const say = (t, kind) => { const m = $("msg"); m.textContent = t; m.className = "msg " + kind; m.hidden = false; };
+  const longDate = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "long", day: "numeric" }); };
+  const li = (title, sub) => { const e = document.createElement("li"); e.textContent = title;
+    if (sub) { const s = document.createElement("small"); s.textContent = sub; e.append(s); } return e; };
+  const empty = (text, href, link) => { const e = document.createElement("p"); e.className = "empty"; e.textContent = text + " ";
+    const a = document.createElement("a"); a.href = href; a.textContent = link; e.append(a); return e; };
+
+  // Sign-ups and sponsorships: until the database is connected these come
+  // from what was entered on this device; afterwards they load from Supabase.
+  function mySignups() { try { return JSON.parse(localStorage.getItem("dorldor-storyteller-signups")) || []; } catch { return []; } }
+
+  function render(u) {
+    $("hello").textContent = "Shalom, " + Auth.displayName(u).split(" ")[0] + "!";
+    $("p-name").value = Auth.displayName(u) === u.email ? "" : Auth.displayName(u);
+    $("p-phone").value = Auth.phoneOf(u);
+    $("p-email").value = u.email || "";
+
+    const stories = mySignups().sort((a, b) => a.date.localeCompare(b.date));
+    $("tickets").textContent = stories.length;
+    const sl = $("stories"); sl.replaceChildren();
+    if (stories.length) stories.forEach(r => sl.append(li("Motzai Shabbat, " + longDate(r.date), "Parshat " + r.parsha)));
+    else sl.replaceWith(Object.assign(empty("You haven't signed up to tell a story yet.", "index.html#story", "Pick a week"), { id: "stories" }));
+
+    $("sponsorships").replaceWith(Object.assign(empty("No sponsorships yet.", "index.html#sponsor", "Sponsor a week"), { id: "sponsorships" }));
+    $("content").hidden = false;
+  }
+
+  if (!Auth.configured) {
+    $("gate").textContent = "Log-in is not switched on yet, so profiles are not available. Everything else on the main page works for now.";
+    $("gate").hidden = false;
+  } else {
+    Auth.user().then(u => {
+      if (!u) { location.replace("signin.html?next=profile"); return; }
+      render(u);
+    }).catch(() => { $("gate").textContent = "Sorry — your profile could not be loaded. Please try again."; $("gate").hidden = false; });
+
+    $("f-profile").onsubmit = async e => {
+      e.preventDefault();
+      const name = $("p-name").value.trim(), phone = $("p-phone").value.trim();
+      if (!name) return say("Please enter your name.", "err");
+      if (phone && phone.replace(/\D/g, "").length < 10) return say("Please enter a 10-digit phone number.", "err");
+      const b = e.target.querySelector("button"); b.disabled = true;
+      try { const u = await Auth.updateProfile(name, phone); if (u) $("hello").textContent = "Shalom, " + name.split(" ")[0] + "!"; say("Saved.", "ok"); }
+      catch { say("Sorry — your details could not be saved. Please try again.", "err"); }
+      b.disabled = false;
+    };
+    $("signout").onclick = async () => { await Auth.signOut(); location.href = "index.html"; };
+  }
+</script>
+</body>
+</html>

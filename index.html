@@ -170,6 +170,7 @@
   <a href="#wall">Our Sponsors</a>
   <a href="#story">Tell a Story</a>
   <a href="#pay">Pay by Zelle</a>
+  <a href="profile.html" id="nav-profile" hidden>My profile</a>
   <a href="signin.html" id="nav-auth" class="auth">Sign in</a>
 </div></nav>
 
@@ -565,6 +566,8 @@ Auth.user().then(u => {
   a.href = "#";
   a.addEventListener("click", async e => { e.preventDefault(); await Auth.signOut(); location.reload(); });
   $("r-name").value = name;
+  $("nav-profile").hidden = false;
+  if (Auth.phoneOf(u)) $("f-phone").value = Auth.phoneOf(u);
   renderWeeks("weeks", "sponsor");
   renderWeeks("stories", "story");
   $("promo-note").textContent = "You're logged in.";
