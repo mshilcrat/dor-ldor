@@ -22,7 +22,6 @@
   .kicker{display:inline-block;background:var(--navy);color:#fff;font-weight:700;font-size:12px;letter-spacing:.08em;padding:6px 16px;border-radius:999px}
   h1{font-size:clamp(36px,9vw,54px);line-height:1.05;margin:12px 0 2px;font-weight:700;
     -webkit-text-stroke:7px #fff;paint-order:stroke fill;filter:drop-shadow(0 6px 10px rgba(20,34,79,.2))}
-  .hello{font-weight:700;color:var(--muted);margin:0}
   .card{background:#fff;border-radius:22px;padding:22px;margin-top:20px;box-shadow:0 6px 20px rgba(20,34,79,.14)}
   h2{display:table;margin:0 auto 14px;font-size:18px;letter-spacing:.04em;text-transform:uppercase;color:#fff;
     background:var(--navy);padding:7px 20px;border-radius:999px;box-shadow:0 4px 0 var(--yellow)}
@@ -57,7 +56,6 @@
   <div class="top">
     <div class="kicker">DOR L'DOR · AVOS U'BANIM</div>
     <h1>My Profile</h1>
-    <p class="hello" id="hello"></p>
   </div>
 
   <div class="msg info" id="gate" hidden></div>
@@ -117,7 +115,6 @@
   function mySignups() { try { return JSON.parse(localStorage.getItem("dorldor-storyteller-signups")) || []; } catch { return []; } }
 
   function render(u) {
-    $("hello").textContent = "Shalom, " + Auth.displayName(u).split(" ")[0] + "!";
     $("p-name").value = Auth.displayName(u) === u.email ? "" : Auth.displayName(u);
     $("p-phone").value = Auth.phoneOf(u);
     $("p-email").value = u.email || "";
@@ -147,7 +144,7 @@
       if (!name) return say("Please enter your name.", "err");
       if (phone && phone.replace(/\D/g, "").length < 10) return say("Please enter a 10-digit phone number.", "err");
       const b = e.target.querySelector("button"); b.disabled = true;
-      try { const u = await Auth.updateProfile(name, phone); if (u) $("hello").textContent = "Shalom, " + name.split(" ")[0] + "!"; say("Saved.", "ok"); }
+      try { const u = await Auth.updateProfile(name, phone); say("Saved.", "ok"); }
       catch { say("Sorry — your details could not be saved. Please try again.", "err"); }
       b.disabled = false;
     };
