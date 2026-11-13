@@ -113,6 +113,13 @@
   .rsvp label{margin-top:8px}
   #r-kids{width:140px}
   #rsvp-thanks{margin:14px 0 0}
+  .kidpick{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 14px}
+  .kidpick label{display:flex;align-items:center;gap:8px;background:#eef2fb;border:2px solid #cdd6ee;border-radius:999px;
+    padding:9px 16px;font-weight:700;cursor:pointer;margin:0;user-select:none}
+  .kidpick label:has(input:checked){background:var(--yellow);border-color:var(--yellow)}
+  .kidpick input{width:20px;height:20px;margin:0;accent-color:var(--navy)}
+  .kid-hint{font-size:14px;color:var(--muted);font-weight:600;margin:0 0 10px}
+  .kid-hint a{color:var(--pink)}
   #raffle-promo{padding-top:0}
   .promo{font-size:clamp(17px,2.6vw,20px);padding:18px}
   .promo-cta{margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;font-size:16px}
@@ -211,6 +218,11 @@
     <h2>Coming This Week? Let Us Know!</h2>
     <div class="card">
       <p class="rsvp-lead">Tell us how many kids you are bringing so we can order enough food for everyone. Not required — everyone is welcome either way!</p>
+      <form id="rsvp-kids" hidden>
+        <p class="kid-hint" id="rsvp-kids-lead"></p>
+        <div class="kidpick" id="kidpick"></div>
+        <button class="btn-pink" id="rk-go" type="submit">Count us in!</button>
+      </form>
       <form id="rsvp-form" class="rsvp">
         <div class="grow">
           <label for="r-name">Parent's name</label>
@@ -314,7 +326,7 @@ const digits = p => "+1" + p.replace(/\D/g, "");
 const today = new Date(); today.setHours(0,0,0,0);
 let db = null, me = null;
 let weeks = [], upcoming = [], current = null, settings = {}, contacts = [];
-let mine = { sponsorships: [], storytellers: [] };   // this account's own requests
+let mine = { sponsorships: [], storytellers: [], kids: [], kidRsvps: [] };   // this account's own records
 let chosen = null, mode = "sponsor";
 
 async function loadAll() {
@@ -330,11 +342,13 @@ async function loadAll() {
   contacts = Array.isArray(settings.contacts) ? settings.contacts : [];
   me = u;
   if (me) {
-    const [s, t] = await Promise.all([
+    const [s, t, k, kr] = await Promise.all([
       db.from("sponsorships").select("*").eq("user_id", me.id),
-      db.from("storytellers").select("*").eq("user_id", me.id)
+      db.from("storytellers").select("*").eq("user_id", me.id),
+      db.from("kids").select("id,first_name").eq("parent_id", me.id).order("created_at"),
+      db.from("kid_rsvps").select("kid_id,week_date").eq("parent_id", me.id)
     ]);
-    mine = { sponsorships: s.data || [], storytellers: t.data || [] };
+    mine = { sponsorships: s.data || [], storytellers: t.data || [], kids: k.data || [], kidRsvps: kr.data || [] };
   }
   upcoming = weeks.filter(w => parse(w.week_date) >= today);
   current = upcoming[0] || weeks[weeks.length - 1] || null;
@@ -502,7 +516,53 @@ $("dlg-signup").addEventListener("click", async () => {
   $("dlg").close();
 });
 
-// RSVP head-count for the current week
+// RSVP by child, for logged-in parents who have added their kids.
+// Pre-registered kids earn raffle tickets (see the profile page).
+function renderKidRsvp() {
+  const form = $("rsvp-kids"), lead = $("rsvp-kids-lead"), pick = $("kidpick");
+  const kidsForm = me && mine.kids.length && current;
+  form.hidden = !kidsForm;
+  $("rsvp-form").hidden = !!kidsForm;
+  if (!kidsForm) {
+    if (me && current) {
+      const h = el("p", "kid-hint", "Add your kids on "); const a = el("a", null, "your profile"); a.href = "profile.html";
+      h.append(a, " to pre-register them by name and earn raffle tickets.");
+      $("rsvp-form").before(h); h.id = "kid-nudge";
+    }
+    return;
+  }
+  const reg = new Set(mine.kidRsvps.filter(r => r.week_date === current.week_date).map(r => r.kid_id));
+  lead.textContent = "Tick who is coming on Motzai Shabbat, " + longDate(current.week_date) + ". Every 2 weeks in a row pre-registered earns each child a raffle ticket!";
+  pick.replaceChildren();
+  mine.kids.forEach(k => {
+    const l = el("label"), c = el("input"); c.type = "checkbox"; c.value = k.id; c.checked = reg.has(k.id);
+    l.append(c, k.first_name); pick.append(l);
+  });
+  $("rk-go").textContent = reg.size ? "Update who's coming" : "Count us in!";
+}
+$("rsvp-kids").addEventListener("submit", async e => {
+  e.preventDefault();
+  const thanks = $("rsvp-thanks"), b = $("rk-go"); b.disabled = true;
+  const want = new Set([...$("kidpick").querySelectorAll("input:checked")].map(i => Number(i.value)));
+  const have = new Set(mine.kidRsvps.filter(r => r.week_date === current.week_date).map(r => r.kid_id));
+  const add = [...want].filter(id => !have.has(id)).map(kid_id => ({ kid_id, week_date: current.week_date }));
+  const drop = [...have].filter(id => !want.has(id));
+  let error = null;
+  if (add.length) ({ error } = await db.from("kid_rsvps").insert(add));
+  if (!error && drop.length) ({ error } = await db.from("kid_rsvps").delete().eq("week_date", current.week_date).in("kid_id", drop));
+  b.disabled = false;
+  if (error) thanks.textContent = "Sorry — that did not go through. Please just come, or speak with an organizer.";
+  else {
+    const names = mine.kids.filter(k => want.has(k.id)).map(k => k.first_name);
+    thanks.textContent = names.length
+      ? "🍕 Thank you! We are counting on " + names.join(", ") + " for Motzai Shabbat, " + longDate(current.week_date) + ". See you there!"
+      : "Okay — nobody from your family is registered for this week.";
+    await refresh();
+  }
+  thanks.hidden = false;
+});
+
+// RSVP head-count for the current week (guests, and parents with no kids added)
 $("rsvp-form").addEventListener("submit", async e => {
   e.preventDefault();
   const name = $("r-name").value.trim(), kids = Number($("r-kids").value);
@@ -553,6 +613,8 @@ function render() {
   renderWall();
   renderZelle();
   renderContacts();
+  const nudge = $("kid-nudge"); if (nudge) nudge.remove();
+  renderKidRsvp();
 }
 async function refresh() { await loadAll(); render(); }
 
