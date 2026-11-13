@@ -6,7 +6,7 @@
    While these are "", sign-in is switched off and the forms on
    the main page work without an account.
    ============================================================ */
-const DORLDOR_SUPABASE = { url: "", anonKey: "" };
+const DORLDOR_SUPABASE = { url: "https://qbaruefuwmsxpurjrcer.supabase.co", anonKey: "sb_publishable_chXOqZi8oOK6s2gPT9yzYQ_FBabphp2" };
 
 const Auth = (() => {
   const configured = !!(DORLDOR_SUPABASE.url && DORLDOR_SUPABASE.anonKey);
