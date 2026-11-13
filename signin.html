@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in – Dor L'Dor</title>
+<style>
+  :root{--navy:#14224f;--pink:#d81b60;--yellow:#ffc928;--teal:#149aa3;--sky:#e3f4ff;--muted:#5a6485}
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px 16px;
+    font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:var(--navy);line-height:1.5;
+    background:linear-gradient(180deg,#bfe6ff 0,var(--sky) 50%,#fff7d6 100%)}
+  main{width:100%;max-width:420px;text-align:center}
+  .kicker{display:inline-block;background:var(--navy);color:#fff;font-weight:700;font-size:12px;
+    letter-spacing:.08em;padding:6px 16px;border-radius:999px}
+  h1{font-family:"Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;font-size:clamp(44px,14vw,68px);
+    line-height:1;margin:14px 0 4px;text-shadow:0 4px 0 #fff,0 8px 18px rgba(20,34,79,.25)}
+  h1 span{color:var(--pink)}
+  .heb{font-size:28px;font-weight:700}
+  .card{background:#fff;border-radius:22px;padding:26px 22px;margin-top:22px;box-shadow:0 6px 20px rgba(20,34,79,.14)}
+  h2{font-family:"Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;font-size:24px;margin:0 0 6px}
+  p{margin:0 0 18px;font-weight:700;color:var(--muted)}
+  button,.btn{font:inherit;font-weight:800;border:0;border-radius:999px;padding:14px 22px;cursor:pointer;
+    width:100%;display:block;text-decoration:none}
+  #google{background:var(--navy);color:#fff;font-size:18px}
+  #google:hover{filter:brightness(1.15)}
+  #google:disabled{opacity:.5;cursor:not-allowed}
+  button:focus-visible,a:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+  .msg{background:#fff3c4;border-radius:14px;padding:12px 14px;margin:16px 0 0;font-weight:700;color:var(--navy)}
+  .back{display:inline-block;margin-top:18px;font-weight:800;color:var(--navy)}
+</style>
+</head>
+<body>
+<main>
+  <div class="kicker">MILL BASIN · MOTZAI SHABBAT LEARNING</div>
+  <h1>DOR <span>L'DOR</span></h1>
+  <div class="heb" lang="he" dir="rtl">אבות ובנים</div>
+
+  <div class="card">
+    <h2>Sign in</h2>
+    <p>Sign in to RSVP, sponsor a week, or sign up to tell a story.</p>
+    <button id="google" type="button">Sign in with Google</button>
+    <div class="msg" id="msg" role="status" hidden></div>
+  </div>
+
+  <a class="back" href="index.html">← Back to Dor L'Dor</a>
+</main>
+
+<script src="auth.js"></script>
+<script>
+  const btn = document.getElementById("google"), msg = document.getElementById("msg");
+  const say = t => { msg.textContent = t; msg.hidden = false; };
+
+  // Where to land after signing in: the main page, at the section the person came from.
+  const next = new URLSearchParams(location.search).get("next") || "";
+  const home = new URL("index.html" + (/^#[a-z]+$/.test(next) ? next : ""), location.href).href;
+
+  if (!Auth.configured) {
+    btn.disabled = true;
+    say("Sign-in is not switched on yet. Everything on the main page works without an account for now.");
+  } else {
+    Auth.user().then(u => { if (u) location.replace(home); }).catch(() => {});
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      // Google returns to the plain main page; the section is remembered here.
+      try { sessionStorage.setItem("dorldor-next", home.split("#")[1] || ""); } catch {}
+      try { await Auth.signInWithGoogle(home.split("#")[0]); }
+      catch { btn.disabled = false; say("Sorry — sign-in did not start. Please try again."); }
+    });
+  }
+</script>
+</body>
+</html>

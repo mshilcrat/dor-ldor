@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dor L'Dor – Avos U'Banim | Mill Basin</title>
+<style>
+  :root{
+    --navy:#14224f; --pink:#d81b60; --yellow:#ffc928; --teal:#149aa3;
+    --sky:#e3f4ff; --white:#fff; --ink:#1b2440; --muted:#5a6485;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:var(--ink);
+    background:linear-gradient(180deg,#bfe6ff 0,var(--sky) 320px,#fff7d6 100%);line-height:1.5}
+  h1,h2,h3{font-family:"Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;margin:0;text-wrap:balance}
+  a{color:inherit}
+  .wrap{max-width:860px;margin:0 auto;padding:0 16px}
+
+  nav{position:sticky;top:0;z-index:5;background:var(--navy);box-shadow:0 2px 10px rgba(20,34,79,.3)}
+  nav .wrap{display:flex;gap:4px;overflow-x:auto;padding-top:8px;padding-bottom:8px}
+  nav a{color:#fff;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.04em;
+    text-transform:uppercase;padding:8px 14px;border-radius:999px;white-space:nowrap}
+  nav a.auth{background:var(--pink)}
+  nav a:hover,nav a:focus-visible{background:var(--yellow);color:var(--navy);outline:none}
+
+  header{text-align:center;padding:36px 0 8px}
+  .kicker{display:inline-block;background:var(--navy);color:#fff;font-weight:700;font-size:13px;
+    letter-spacing:.08em;padding:6px 18px;border-radius:999px}
+  .kicker i{color:var(--yellow);font-style:normal;margin:0 8px}
+  h1{font-size:clamp(52px,13vw,104px);line-height:1;margin-top:14px;color:var(--navy);
+    text-shadow:0 4px 0 #fff,0 8px 18px rgba(20,34,79,.25)}
+  h1 span{color:var(--pink)}
+  .heb{font-size:clamp(28px,6vw,44px);font-weight:700;color:var(--navy);margin-top:6px}
+  .sub{font-weight:700;color:var(--navy)}
+
+  section{padding:28px 0;scroll-margin-top:104px}
+  h2{font-size:28px;color:var(--navy);margin-bottom:14px}
+  .card{background:#fff;border-radius:20px;padding:22px;box-shadow:0 6px 20px rgba(20,34,79,.12)}
+
+  .when{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:14px}
+  .pill{font-weight:800;font-size:20px;color:#fff;padding:10px 22px;border-radius:999px}
+  .pill.date{background:var(--navy)} .pill.time{background:var(--teal)}
+  .tonight{text-align:center}
+  .tonight .flag{display:inline-block;background:var(--yellow);color:var(--navy);font-weight:800;
+    padding:4px 18px;border-radius:999px;letter-spacing:.05em;margin-bottom:8px}
+  .place{font-weight:800;font-size:20px;color:var(--navy)}
+  .invite{margin-top:12px;font-weight:700;color:var(--navy)}
+
+  .menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .menu div{background:var(--navy);color:#fff;border-radius:18px;padding:18px 12px;text-align:center;
+    font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+  .menu b{display:block;font-size:38px;margin-bottom:4px}
+
+  .week{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:2px dashed #dbe3f5;flex-wrap:wrap}
+  .week:last-child{border-bottom:0}
+  .week .d{flex:1 1 220px}
+  .week .d strong{display:block;font-size:18px;color:var(--navy)}
+  .week .d small{color:var(--muted);font-weight:700}
+  .tag{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;
+    border-radius:999px;margin-left:8px;vertical-align:middle;display:inline-block;white-space:nowrap}
+  .tag.now{background:var(--yellow);color:var(--navy)}
+  .filled{flex:1 1 200px;color:var(--teal);font-weight:800}
+  .filled small{display:block;color:var(--muted);font-weight:600}
+  button,.btn{font:inherit;font-weight:800;border:0;border-radius:999px;padding:11px 22px;cursor:pointer;
+    text-decoration:none;display:inline-block;text-align:center}
+  .btn-pink{background:var(--pink);color:#fff}
+  .btn-navy{background:var(--navy);color:#fff}
+  .btn-ghost{background:#eef2fb;color:var(--navy)}
+  button:hover,.btn:hover{filter:brightness(1.1)}
+  button:focus-visible,.btn:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+  .wall{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+  .thanks{background:#fff;border-radius:18px;padding:18px;text-align:center;border-top:8px solid var(--teal);
+    box-shadow:0 6px 20px rgba(20,34,79,.12)}
+  .thanks.now{border-top-color:var(--pink)}
+  .thanks small{display:block;color:var(--muted);font-weight:700}
+  .thanks strong{display:block;font-size:22px;color:var(--navy);margin:6px 0 2px;overflow-wrap:anywhere}
+  .thanks em{display:block;color:var(--pink);font-weight:700;font-style:normal}
+  .thanks .tag{margin:0 0 6px}
+  .wall-empty{grid-column:1/-1;background:#fff;border-radius:18px;padding:22px;text-align:center;font-weight:700;
+    color:var(--navy);box-shadow:0 6px 20px rgba(20,34,79,.12)}
+  .wall-empty .btn{margin-top:10px}
+  .rsvp-lead{margin:0 0 4px;font-weight:700;color:var(--navy)}
+  .rsvp{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+  .rsvp .grow{flex:1 1 220px}
+  .rsvp label{margin-top:8px}
+  #r-kids{width:140px}
+  #rsvp-thanks{margin:14px 0 0}
+  .raffle{background:var(--yellow);color:var(--navy);border-radius:16px;padding:14px 16px;font-weight:700;
+    text-align:center;font-size:18px;margin-bottom:6px}
+  .note{color:var(--muted);font-size:14px;margin-top:12px}
+
+  ol.steps{margin:0;padding-left:22px}
+  ol.steps li{margin-bottom:8px}
+  .zelle{background:var(--sky);border-radius:16px;padding:16px;margin:14px 0;display:flex;
+    align-items:center;gap:12px;flex-wrap:wrap}
+  .zelle .to{flex:1 1 220px}
+  .zelle .to small{display:block;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:12px}
+  .zelle .to strong{font-size:20px;color:var(--navy);word-break:break-all}
+  .pending{background:#fff3c4;border-radius:16px;padding:16px;margin:14px 0;font-weight:700;color:var(--navy)}
+
+  .contacts{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+  .contact{background:var(--navy);color:#fff;border-radius:18px;padding:18px}
+  .contact strong{font-size:20px;display:block}
+  .contact span{display:block;margin:2px 0 12px;font-weight:700;color:var(--yellow)}
+  .contact .btn{margin:0 6px 6px 0;background:#fff;color:var(--navy);padding:8px 18px}
+
+  dialog{border:0;border-radius:22px;padding:0;max-width:440px;width:calc(100% - 28px);
+    box-shadow:0 20px 60px rgba(20,34,79,.45)}
+  dialog::backdrop{background:rgba(20,34,79,.6)}
+  dialog form{padding:22px}
+  dialog h3{font-size:22px;color:var(--pink)}
+  dialog p{margin:6px 0 14px;color:var(--muted);font-weight:700}
+  label{display:block;font-weight:800;color:var(--navy);margin:12px 0 4px;font-size:14px}
+  input,textarea{width:100%;font:inherit;padding:10px 12px;border:2px solid #cdd6ee;border-radius:12px}
+  input:focus,textarea:focus{outline:none;border-color:var(--teal)}
+  .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .actions .btn-ghost{margin-left:auto}
+
+  nav .wrap{justify-content:center;flex-wrap:wrap;overflow:visible;max-width:1200px}
+  @media (max-width:600px){
+    nav .wrap{flex-wrap:wrap;overflow:visible;gap:2px;padding-top:6px;padding-bottom:6px}
+    nav a{font-size:12px;padding:6px 10px}
+    nav{position:static}
+    section{scroll-margin-top:12px}
+    .week button{width:100%}
+    .rsvp > div, .rsvp button, #r-kids{width:100%;flex:1 1 100%}
+    h2{font-size:24px}
+  }
+  footer{text-align:center;padding:26px 16px 40px;font-weight:800;color:var(--navy)}
+</style>
+</head>
+<body>
+
+<nav aria-label="Sections"><div class="wrap">
+  <a href="#info">This Week</a>
+  <a href="#rsvp">RSVP</a>
+  <a href="#menu">What's On</a>
+  <a href="#sponsor">Sponsor a Week</a>
+  <a href="#wall">Our Sponsors</a>
+  <a href="#story">Tell a Story</a>
+  <a href="#pay">Pay by Zelle</a>
+  <a href="#contact">Contact</a>
+  <a href="signin.html" id="nav-auth" class="auth">Sign in</a>
+</div></nav>
+
+<header class="wrap">
+  <div class="kicker">MILL BASIN<i>●</i>MOTZAI SHABBAT LEARNING<i>●</i>2026</div>
+  <h1>DOR <span>L'DOR</span></h1>
+  <div class="heb" lang="he" dir="rtl">אבות ובנים</div>
+  <div class="sub">Avos U'Banim &nbsp;|&nbsp; Learning program for kids</div>
+</header>
+
+<main class="wrap">
+
+  <section id="info">
+    <div class="card tonight">
+      <div class="flag" id="info-flag"></div>
+      <div class="heb" id="info-parsha" lang="he" dir="rtl"></div>
+      <div class="when">
+        <span class="pill date" id="info-date"></span>
+        <span class="pill time" id="info-time"></span>
+      </div>
+      <div class="place">Cong. Zichron R' Moshe Feinstein<br>6315 Strickland Avenue</div>
+      <div class="invite">Bring a friend, chavruta, parent or relative!<br>Just come—let's fill the room!</div>
+    </div>
+  </section>
+
+  <section id="rsvp">
+    <h2>Coming This Week? Let Us Know!</h2>
+    <div class="card">
+      <p class="rsvp-lead">Tell us how many kids you are bringing so we can order enough food for everyone. Not required — everyone is welcome either way!</p>
+      <form id="rsvp-form" class="rsvp">
+        <div class="grow">
+          <label for="r-name">Parent's name</label>
+          <input id="r-name" required autocomplete="name">
+        </div>
+        <div>
+          <label for="r-kids">Number of kids</label>
+          <input id="r-kids" type="number" inputmode="numeric" min="1" max="20" value="1" required>
+        </div>
+        <button class="btn-pink" id="r-go">Count us in!</button>
+      </form>
+      <div class="raffle" id="rsvp-thanks" role="status" hidden></div>
+    </div>
+  </section>
+
+  <section id="menu">
+    <h2>What's On</h2>
+    <div class="menu">
+      <div><b>🍕</b>Pizza</div>
+      <div><b>🥨</b>Snacks</div>
+      <div><b>📖</b>Storyteller</div>
+      <div><b>🏆</b>Prizes</div>
+    </div>
+  </section>
+
+  <section id="sponsor">
+    <h2>Sponsor a Week <span style="color:var(--pink)">●</span> Dedicate the Learning</h2>
+    <div class="card">
+      <div id="weeks"></div>
+      <p class="note">Tap an open week to reserve it. Your request is sent by text to the organizer, who confirms and marks the week as sponsored.</p>
+    </div>
+  </section>
+
+  <section id="wall">
+    <h2>Thank You to Our Sponsors</h2>
+    <div class="wall" id="wall-box"></div>
+  </section>
+
+  <section id="story">
+    <h2>Fathers: Tell a Story</h2>
+    <div class="card">
+      <div class="raffle">🎟️ Sign up to tell a story and earn an <strong>extra ticket</strong> for the end-of-season <strong>Special Super Mega Raffle!</strong></div>
+      <div id="stories"></div>
+      <div class="raffle" id="story-thanks" role="status" hidden></div>
+      <p class="note">Tap an open week and enter your name and phone number. An organizer will confirm with you.</p>
+    </div>
+  </section>
+
+  <section id="pay">
+    <h2>Pay by Zelle</h2>
+    <div class="card">
+      <div id="zelle-box"></div>
+      <ol class="steps">
+        <li>Open Zelle in your banking app.</li>
+        <li>Send to the account shown above.</li>
+        <li id="amount-step"></li>
+        <li>In the memo, write <strong>Dor L'Dor</strong> and the date of the week you are sponsoring.</li>
+        <li>Text one of the organizers below so your week is confirmed.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="contact">
+    <h2>Sponsorship Opportunities or Questions</h2>
+    <div class="contacts" id="contacts"></div>
+  </section>
+
+</main>
+
+<footer>Dor L'Dor · Cong. Zichron R' Moshe Feinstein · 6315 Strickland Avenue</footer>
+
+<dialog id="dlg" aria-labelledby="dlg-title">
+  <form method="dialog" id="dlg-form">
+    <h3 id="dlg-title">Sponsor this week</h3>
+    <p id="dlg-week"></p>
+    <label for="f-name">Your name</label>
+    <input id="f-name" required autocomplete="name">
+    <div id="f-ded-wrap">
+      <label for="f-ded">Dedication (optional)</label>
+      <textarea id="f-ded" rows="2" placeholder="In honor of… / In memory of…"></textarea>
+    </div>
+    <div id="f-phone-wrap">
+      <label for="f-phone">Phone number</label>
+      <input id="f-phone" type="tel" autocomplete="tel" inputmode="tel">
+    </div>
+    <div id="send-wrap">
+      <label>Send my request to</label>
+      <div class="actions" id="dlg-send"></div>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn-pink" id="dlg-signup">Sign me up</button>
+      <button type="button" class="btn-ghost" id="dlg-close">Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="auth.js"></script>
+<script>
+/* ============================================================
+   EDIT HERE — everything on the page is driven by this block.
+   ============================================================ */
+const CONFIG = {
+  // Zelle: fill in when ready. Leave "" to show "details coming soon".
+  zelle: { to: "", name: "" },      // to = email or phone, name = name shown in the bank app
+
+  // Sponsorship amount, e.g. "$180". Leave "" to show "ask an organizer".
+  amount: "",
+
+  contacts: [
+    { name: "Nechemia Aryeh", phone: "(718) 915-3112" },
+    { name: "Danny Gil",      phone: "(917) 291-7222" }
+  ],
+
+  // Storyteller sign-ups go to a Google Form. Fill these in once the form exists:
+  //   action = https://docs.google.com/forms/d/e/<FORM ID>/formResponse
+  //   name / phone / week = the form's field IDs, e.g. "entry.123456789"
+  // While action is "", sign-ups are saved only in the browser of the
+  // device they were entered on.
+  googleForm: { action: "", name: "", phone: "", week: "" },
+
+  // RSVP head-count goes to its own Google Form, set up the same way.
+  rsvpForm: { action: "", name: "", kids: "", week: "" },
+
+  // One line per Motzai Shabbat. To mark a week as sponsored, put the
+  // sponsor's name between the quotes (and the dedication, if any).
+  // Sponsored weeks also appear on the thank-you wall, and stay there after
+  // the date passes. Earlier weeks can be added as extra lines at the top.
+  // To mark a week's storyteller as taken, put the father's name in storyteller.
+  weeks: [
+    { date: "2026-11-14", parsha: "Toldot",     hebrew: "פרשת תולדות", time: "6:45 PM", sponsor: "", dedication: "", storyteller: "" },
+    { date: "2026-11-21", parsha: "Vayetzei",   hebrew: "פרשת ויצא",   time: "",        sponsor: "", dedication: "", storyteller: "" },
+    { date: "2026-11-28", parsha: "Vayishlach", hebrew: "פרשת וישלח",  time: "",        sponsor: "", dedication: "", storyteller: "" },
+    { date: "2026-12-05", parsha: "Vayeshev",   hebrew: "פרשת וישב",   time: "",        sponsor: "", dedication: "", storyteller: "" },
+    { date: "2026-12-12", parsha: "Miketz",     hebrew: "פרשת מקץ",    time: "",        sponsor: "", dedication: "", storyteller: "" },
+    { date: "2026-12-19", parsha: "Vayigash",   hebrew: "פרשת ויגש",   time: "",        sponsor: "", dedication: "", storyteller: "" },
+    { date: "2026-12-26", parsha: "Vayechi",    hebrew: "פרשת ויחי",   time: "",        sponsor: "", dedication: "", storyteller: "" }
+  ]
+};
+/* ====================== END OF EDIT BLOCK ====================== */
+
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const parse = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+const longDate = s => parse(s).toLocaleDateString("en-US", { month: "long", day: "numeric" });
+const digits = p => "+1" + p.replace(/\D/g, "");
+
+const today = new Date(); today.setHours(0,0,0,0);
+const upcoming = CONFIG.weeks.filter(w => parse(w.date) >= today);
+const current = upcoming[0] || CONFIG.weeks[CONFIG.weeks.length - 1];
+
+// This week
+$("info-flag").textContent = upcoming.length && (parse(current.date) - today) < 7*864e5 ? "THIS MOTZAI SHABBAT" : "NEXT MOTZAI SHABBAT";
+$("info-parsha").textContent = current.hebrew;
+$("info-date").textContent = "📅 " + longDate(current.date);
+if (current.time) $("info-time").textContent = "🕒 " + current.time; else $("info-time").remove();
+
+// Week lists: sponsorship spots and storyteller spots
+let chosen = null, mode = "sponsor";
+// Storyteller sign-ups: sent to the Google Form in CONFIG when it is set.
+const STORE = "dorldor-storyteller-signups";
+function localSignups() {
+  try { return JSON.parse(localStorage.getItem(STORE)) || []; } catch { return []; }
+}
+async function saveSignup(rec) {
+  const g = CONFIG.googleForm;
+  if (g.action) {
+    const body = new URLSearchParams();
+    body.set(g.name, rec.name);
+    body.set(g.phone, rec.phone);
+    body.set(g.week, longDate(rec.date) + " – Parshat " + rec.parsha);
+    // Google Forms does not report back to other pages, so a failure here
+    // means only that the request could not leave the device.
+    await fetch(g.action, { method: "POST", mode: "no-cors", body });
+  }
+  try { localStorage.setItem(STORE, JSON.stringify(localSignups().concat(rec))); } catch {}
+  memory.push(rec);
+}
+const memory = localSignups();
+
+function renderWeeks(boxId, kind) {
+  const box = $(boxId);
+  box.replaceChildren();
+  (upcoming.length ? upcoming : [current]).forEach((w, i) => {
+    const row = el("div", "week");
+    const d = el("div", "d");
+    const title = el("strong", null, "Motzai Shabbat, " + longDate(w.date));
+    if (i === 0) title.append(el("span", "tag now", "This week"));
+    d.append(title, el("small", null, "Parshat " + w.parsha + (w.time ? " · " + w.time : "")));
+    row.append(d);
+    const mine = memory.find(r => r.date === w.date);
+    const taken = kind === "sponsor" ? w.sponsor : (w.storyteller || (mine && mine.name));
+    if (taken) {
+      const f = el("div", "filled", (kind === "sponsor" ? "✓ Sponsored by " : "✓ Storyteller: ") + taken);
+      if (kind === "sponsor" && w.dedication) f.append(el("small", null, w.dedication));
+      row.append(f);
+    } else {
+      const label = kind === "sponsor"
+        ? (i === 0 ? "No sponsor yet — sponsor this week" : "Open — sponsor this week")
+        : "Sign me up! I am happy to tell the story";
+      const b = el("button", kind === "sponsor" ? "btn-pink" : "btn-navy", label);
+      b.type = "button";
+      b.addEventListener("click", () => {
+        if (needSignIn(kind === "sponsor" ? "#sponsor" : "#story")) return;
+        if (me && !$("f-name").value) $("f-name").value = Auth.displayName(me);
+        chosen = w; mode = kind;
+        $("dlg-title").textContent = kind === "sponsor" ? "Sponsor this week" : "Tell the story this week";
+        $("f-ded-wrap").hidden = kind !== "sponsor";
+        $("send-wrap").hidden = kind !== "sponsor";
+        $("f-phone-wrap").hidden = kind !== "story";
+        $("f-phone").required = kind === "story";
+        $("dlg-signup").hidden = kind !== "story";
+        $("dlg-week").textContent = "Motzai Shabbat, " + longDate(w.date) + " · Parshat " + w.parsha;
+        $("dlg").showModal();
+      });
+      row.append(b);
+    }
+    box.append(row);
+  });
+}
+renderWeeks("weeks", "sponsor");
+renderWeeks("stories", "story");
+
+// Thank-you wall: every sponsored week, past and upcoming, newest first
+const wall = $("wall-box");
+const sponsored = CONFIG.weeks.filter(w => w.sponsor).sort((a, b) => parse(b.date) - parse(a.date));
+sponsored.forEach(w => {
+  const now = upcoming.length && w === current;
+  const c = el("div", "thanks" + (now ? " now" : ""));
+  if (now) c.append(el("span", "tag now", "This week"));
+  c.append(el("small", null, "Motzai Shabbat, " + longDate(w.date) + " · Parshat " + w.parsha),
+           el("strong", null, w.sponsor));
+  if (w.dedication) c.append(el("em", null, w.dedication));
+  wall.append(c);
+});
+if (!sponsored.length) {
+  const e = el("div", "wall-empty", "Our first sponsor's name will appear here. Will it be yours?");
+  const a = el("a", "btn btn-pink", "Sponsor a week"); a.href = "#sponsor";
+  e.append(el("br"), a);
+  wall.append(e);
+}
+
+// Zelle
+const zb = $("zelle-box");
+if (CONFIG.zelle.to) {
+  const box = el("div", "zelle"), to = el("div", "to");
+  to.append(el("small", null, "Send Zelle to"), el("strong", null, CONFIG.zelle.to));
+  if (CONFIG.zelle.name) to.append(el("div", null, CONFIG.zelle.name));
+  const copy = el("button", "btn-navy", "Copy"); copy.type = "button";
+  copy.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(CONFIG.zelle.to); copy.textContent = "Copied ✓"; }
+    catch { copy.textContent = "Press and hold to copy"; }
+    setTimeout(() => copy.textContent = "Copy", 2000);
+  });
+  box.append(to, copy); zb.append(box);
+} else {
+  zb.append(el("div", "pending", "Zelle details are coming soon. Until then, please contact one of the organizers below to arrange payment."));
+}
+$("amount-step").textContent = CONFIG.amount
+  ? "Enter the sponsorship amount: " + CONFIG.amount + "."
+  : "Enter the sponsorship amount — ask an organizer for the amount.";
+
+// Contacts
+CONFIG.contacts.forEach(c => {
+  const card = el("div", "contact");
+  card.append(el("strong", null, c.name), el("span", null, c.phone));
+  const call = el("a", "btn", "Call"); call.href = "tel:" + digits(c.phone);
+  const text = el("a", "btn", "Text"); text.href = "sms:" + digits(c.phone);
+  card.append(call, text);
+  $("contacts").append(card);
+});
+
+// Sign-up dialog: builds a pre-written text to the chosen organizer
+CONFIG.contacts.forEach(c => {
+  const b = el("button", "btn-pink", "Text " + c.name.split(" ")[0]); b.type = "button";
+  b.addEventListener("click", () => {
+    const form = $("dlg-form");
+    if (!form.reportValidity()) return;
+    const ded = $("f-ded").value.trim();
+    const when = "Motzai Shabbat, " + longDate(chosen.date) + " (Parshat " + chosen.parsha + ").";
+    const msg = "Hi " + c.name.split(" ")[0] + ", this is " + $("f-name").value.trim() +
+      (mode === "sponsor"
+        ? ". I would like to sponsor Dor L'Dor on " + when + (ded ? " Dedication: " + ded : "")
+        : ". I would like to tell the story at Dor L'Dor on " + when);
+    location.href = "sms:" + digits(c.phone) + "?&body=" + encodeURIComponent(msg);
+    $("dlg").close();
+    if (mode === "sponsor") $("pay").scrollIntoView();
+  });
+  $("dlg-send").append(b);
+});
+$("dlg-signup").addEventListener("click", async () => {
+  const phone = $("f-phone"), name = $("f-name").value.trim();
+  phone.setCustomValidity(phone.value.replace(/\D/g, "").length >= 10 ? "" : "Please enter a 10-digit phone number");
+  if (!$("dlg-form").reportValidity()) return;
+  const thanks = $("story-thanks");
+  try {
+    await saveSignup({ type: "storyteller", date: chosen.date, parsha: chosen.parsha,
+      name, phone: phone.value.trim(), submitted: new Date().toISOString() });
+    thanks.textContent = "🎟️ Thank you, " + name + "! You are signed up to tell the story on Motzai Shabbat, " +
+      longDate(chosen.date) + ". An organizer will confirm with you.";
+    $("dlg-form").reset();
+    renderWeeks("stories", "story");
+  } catch {
+    thanks.textContent = "Sorry — your sign-up did not go through. Please contact an organizer below.";
+  }
+  thanks.hidden = false;
+  $("dlg").close();
+});
+// RSVP head-count for the current week
+$("rsvp-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (needSignIn("#rsvp")) return;
+  const name = $("r-name").value.trim(), kids = Number($("r-kids").value), g = CONFIG.rsvpForm;
+  const rec = { type: "rsvp", date: current.date, parsha: current.parsha, name, kids, submitted: new Date().toISOString() };
+  const thanks = $("rsvp-thanks");
+  try {
+    if (g.action) {
+      const body = new URLSearchParams();
+      body.set(g.name, name); body.set(g.kids, kids);
+      body.set(g.week, longDate(current.date) + " – Parshat " + current.parsha);
+      await fetch(g.action, { method: "POST", mode: "no-cors", body });
+    }
+    try {
+      const all = JSON.parse(localStorage.getItem("dorldor-rsvps")) || [];
+      localStorage.setItem("dorldor-rsvps", JSON.stringify(all.concat(rec)));
+    } catch {}
+    thanks.textContent = "🍕 Thank you, " + name + "! We are counting on " + kids + (kids === 1 ? " kid" : " kids") +
+      " for Motzai Shabbat, " + longDate(current.date) + ". See you there!";
+    $("rsvp-form").reset();
+    if (me) $("r-name").value = Auth.displayName(me);
+  } catch {
+    thanks.textContent = "Sorry — that did not go through. Please just come, or contact an organizer below.";
+  }
+  thanks.hidden = false;
+});
+
+$("dlg-close").addEventListener("click", () => $("dlg").close());
+
+// Sign-in (settings are in auth.js). Once Supabase is connected there, RSVP,
+// sponsoring and story sign-up ask the person to sign in first. Until then
+// they work without an account.
+let me = null;
+function needSignIn(hash) {
+  if (!Auth.configured || me) return false;
+  location.href = "signin.html?next=" + encodeURIComponent(hash);
+  return true;
+}
+Auth.user().then(u => {
+  me = u;
+  if (!u) return;
+  const name = Auth.displayName(u), a = $("nav-auth");
+  a.textContent = "Sign out (" + name.split(" ")[0] + ")";
+  a.href = "#";
+  a.addEventListener("click", async e => { e.preventDefault(); await Auth.signOut(); location.reload(); });
+  $("r-name").value = name;
+  try {
+    const next = sessionStorage.getItem("dorldor-next");
+    sessionStorage.removeItem("dorldor-next");
+    if (next && $(next)) $(next).scrollIntoView();
+  } catch {}
+}).catch(() => {});
+</script>
+</body>
+</html>
