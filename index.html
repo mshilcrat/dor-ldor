@@ -37,24 +37,10 @@
       repeating-conic-gradient(from 0deg at 50% 42%,#b9e3ff 0 6deg,#9ed6fb 6deg 12deg)}
   .hero::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:46px;background:var(--sky);
     border-radius:50% 50% 0 0/100% 100% 0 0}
-  header{position:relative;z-index:1;text-align:center;padding:30px 0 8px}
-  .title{position:relative;display:inline-block}
-  .burst{position:absolute;top:8%;width:clamp(34px,7vw,74px);height:auto}
-  .burst.l{right:100%;margin-right:4px} .burst.r{left:100%;margin-left:4px;transform:scaleX(-1)}
-  .scene{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:center;
-    gap:clamp(10px,4vw,40px);margin:18px auto 0;line-height:1}
-  .scene .side{font-size:clamp(46px,11vw,96px);filter:drop-shadow(0 6px 6px rgba(20,34,79,.25))}
-  .scene .pizza{transform:rotate(-14deg)} .scene .prize{transform:rotate(8deg)}
-  .scene .gift{font-size:.62em;margin-left:-.25em}
-  .scene .book{width:clamp(120px,26vw,200px);aspect-ratio:1;border-radius:50%;background:#fff;
-    border:6px solid var(--navy);box-shadow:0 8px 0 var(--yellow),0 16px 26px rgba(20,34,79,.25);
-    display:grid;place-items:center;font-size:clamp(62px,14vw,108px)}
-  .star{position:absolute;z-index:1;font-size:clamp(18px,3.4vw,34px);line-height:1}
-  .ribbon{position:relative;z-index:2;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 14px;
-    width:fit-content;max-width:calc(100% - 28px);margin:22px auto 0;background:var(--navy);color:#fff;
-    font-family:"Fredoka",system-ui,sans-serif;font-weight:700;font-size:clamp(15px,2.6vw,22px);letter-spacing:.06em;
-    padding:10px 24px;border-radius:999px;border:4px solid #fff;box-shadow:0 6px 16px rgba(20,34,79,.3)}
-  .ribbon i{font-style:normal;color:var(--yellow)}
+  header{position:relative;z-index:1;text-align:center;padding:24px 0 0}
+  .banner{position:relative;z-index:1;display:block;width:calc(100% - 28px);max-width:900px;height:auto;
+    margin:14px auto 0;border-radius:26px;border:5px solid #fff;box-shadow:0 12px 28px rgba(20,34,79,.3)}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
   .kicker{display:inline-block;background:var(--navy);color:#fff;font-weight:700;font-size:13px;
     letter-spacing:.08em;padding:6px 18px;border-radius:999px}
   .kicker i{color:var(--yellow);font-style:normal;margin:0 8px}
@@ -188,28 +174,12 @@
 </div></nav>
 
 <div class="hero">
-  <span class="star" style="left:6%;top:16%;color:#ffc928" aria-hidden="true">★</span>
-  <span class="star" style="left:14%;top:58%;color:#3b8fe8" aria-hidden="true">★</span>
-  <span class="star" style="left:24%;top:80%;color:#d81b60" aria-hidden="true">★</span>
-  <span class="star" style="right:7%;top:20%;color:#3b8fe8" aria-hidden="true">★</span>
-  <span class="star" style="right:15%;top:52%;color:#d81b60" aria-hidden="true">★</span>
-  <span class="star" style="right:25%;top:82%;color:#ffc928" aria-hidden="true">★</span>
   <header class="wrap">
     <div class="kicker">MILL BASIN<i>●</i>MOTZAI SHABBAT LEARNING<i>●</i>2026</div>
-    <div><div class="title">
-      <svg class="burst l" viewBox="0 0 60 70" aria-hidden="true"><g stroke="#ffc928" stroke-width="9" stroke-linecap="round"><path d="M8 10 44 26M6 38h36M12 64l32-14"/></g></svg>
-      <h1>DOR <span>L'DOR</span></h1>
-      <svg class="burst r" viewBox="0 0 60 70" aria-hidden="true"><g stroke="#ffc928" stroke-width="9" stroke-linecap="round"><path d="M8 10 44 26M6 38h36M12 64l32-14"/></g></svg>
-    </div></div>
-    <div class="heb" lang="he" dir="rtl">אבות ובנים</div>
-    <div class="sub">Avos U'Banim &nbsp;|&nbsp; Learning program for kids</div>
+    <h1 class="sr-only">Dor L'Dor – אבות ובנים – Avos U'Banim, learning program for kids</h1>
   </header>
-  <div class="scene" aria-hidden="true">
-    <span class="side pizza">🍕</span>
-    <span class="book">📖</span>
-    <span class="side prize">🏆<span class="gift">🎁</span></span>
-  </div>
-  <div class="ribbon"><i>★</i>PIZZA<i>●</i>SNACKS<i>●</i>STORYTELLER<i>●</i>PRIZES<i>★</i></div>
+  <img class="banner" src="images/hero.webp" width="1080" height="543"
+       alt="Dor L'Dor, אבות ובנים — Avos U'Banim, learning program for kids. A father and two boys learning from an open book, with pizza, a trophy and prizes. Pizza, snacks, storyteller, prizes. This Motzai Shabbat.">
 </div>
 
 <main class="wrap">
@@ -387,6 +357,7 @@ const current = upcoming[0] || CONFIG.weeks[CONFIG.weeks.length - 1];
 
 // This week
 $("info-flag").textContent = upcoming.length && (parse(current.date) - today) < 7*864e5 ? "THIS MOTZAI SHABBAT" : "NEXT MOTZAI SHABBAT";
+$("info-flag").hidden = $("info-flag").textContent.startsWith("THIS");
 $("info-parsha").textContent = current.hebrew;
 $("info-date").textContent = "📅 " + longDate(current.date);
 if (current.time) $("info-time").textContent = "🕒 " + current.time; else $("info-time").remove();
