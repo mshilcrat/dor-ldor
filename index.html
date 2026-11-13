@@ -302,48 +302,9 @@
 
 <script src="auth.js"></script>
 <script>
-/* ============================================================
-   EDIT HERE — everything on the page is driven by this block.
-   ============================================================ */
-const CONFIG = {
-  // Zelle: fill in when ready. Leave "" to show "details coming soon".
-  zelle: { to: "", name: "" },      // to = email or phone, name = name shown in the bank app
-
-  // Sponsorship amount, e.g. "$180". Leave "" to show "ask an organizer".
-  amount: "",
-
-  contacts: [
-    { name: "Nechemia Aryeh", phone: "(718) 915-3112" },
-    { name: "Danny Gil",      phone: "(917) 291-7222" }
-  ],
-
-  // Storyteller sign-ups go to a Google Form. Fill these in once the form exists:
-  //   action = https://docs.google.com/forms/d/e/<FORM ID>/formResponse
-  //   name / phone / week = the form's field IDs, e.g. "entry.123456789"
-  // While action is "", sign-ups are saved only in the browser of the
-  // device they were entered on.
-  googleForm: { action: "", name: "", phone: "", week: "" },
-
-  // RSVP head-count goes to its own Google Form, set up the same way.
-  rsvpForm: { action: "", name: "", kids: "", week: "" },
-
-  // One line per Motzai Shabbat. To mark a week as sponsored, put the
-  // sponsor's name between the quotes (and the dedication, if any).
-  // Sponsored weeks also appear on the thank-you wall, and stay there after
-  // the date passes. Earlier weeks can be added as extra lines at the top.
-  // To mark a week's storyteller as taken, put the father's name in storyteller.
-  weeks: [
-    { date: "2026-11-14", parsha: "Toldot",     hebrew: "פרשת תולדות", time: "6:45 PM", sponsor: "", dedication: "", storyteller: "" },
-    { date: "2026-11-21", parsha: "Vayetzei",   hebrew: "פרשת ויצא",   time: "",        sponsor: "", dedication: "", storyteller: "" },
-    { date: "2026-11-28", parsha: "Vayishlach", hebrew: "פרשת וישלח",  time: "",        sponsor: "", dedication: "", storyteller: "" },
-    { date: "2026-12-05", parsha: "Vayeshev",   hebrew: "פרשת וישב",   time: "",        sponsor: "", dedication: "", storyteller: "" },
-    { date: "2026-12-12", parsha: "Miketz",     hebrew: "פרשת מקץ",    time: "",        sponsor: "", dedication: "", storyteller: "" },
-    { date: "2026-12-19", parsha: "Vayigash",   hebrew: "פרשת ויגש",   time: "",        sponsor: "", dedication: "", storyteller: "" },
-    { date: "2026-12-26", parsha: "Vayechi",    hebrew: "פרשת ויחי",   time: "",        sponsor: "", dedication: "", storyteller: "" }
-  ]
-};
-/* ====================== END OF EDIT BLOCK ====================== */
-
+/* Everything on the page comes from the Dor L'Dor database (see auth.js for
+   the connection). Weeks, sponsors, Zelle details and organizer contacts are
+   managed on the Organizers page. */
 const $ = id => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const parse = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
@@ -351,45 +312,53 @@ const longDate = s => parse(s).toLocaleDateString("en-US", { month: "long", day:
 const digits = p => "+1" + p.replace(/\D/g, "");
 
 const today = new Date(); today.setHours(0,0,0,0);
-const upcoming = CONFIG.weeks.filter(w => parse(w.date) >= today);
-const current = upcoming[0] || CONFIG.weeks[CONFIG.weeks.length - 1];
+let db = null, me = null;
+let weeks = [], upcoming = [], current = null, settings = {}, contacts = [];
+let mine = { sponsorships: [], storytellers: [] };   // this account's own requests
+let chosen = null, mode = "sponsor";
+
+async function loadAll() {
+  db = await Auth.client();
+  const [board, st, u] = await Promise.all([
+    db.rpc("get_week_board"),
+    db.from("site_settings").select("*").eq("id", 1).maybeSingle(),
+    Auth.user()
+  ]);
+  if (board.error) throw board.error;
+  weeks = board.data || [];
+  settings = st.data || {};
+  contacts = Array.isArray(settings.contacts) ? settings.contacts : [];
+  me = u;
+  if (me) {
+    const [s, t] = await Promise.all([
+      db.from("sponsorships").select("*").eq("user_id", me.id),
+      db.from("storytellers").select("*").eq("user_id", me.id)
+    ]);
+    mine = { sponsorships: s.data || [], storytellers: t.data || [] };
+  }
+  upcoming = weeks.filter(w => parse(w.week_date) >= today);
+  current = upcoming[0] || weeks[weeks.length - 1] || null;
+}
 
 // This week
-$("info-flag").textContent = upcoming.length && (parse(current.date) - today) < 7*864e5 ? "THIS MOTZAI SHABBAT" : "NEXT MOTZAI SHABBAT";
-$("info-flag").hidden = $("info-flag").textContent.startsWith("THIS");
-$("info-parsha").textContent = current.hebrew;
-$("info-date").textContent = "📅 " + longDate(current.date);
-if (current.time) $("info-time").textContent = "🕒 " + current.time; else $("info-time").remove();
+function renderInfo() {
+  if (!current) { $("info-parsha").textContent = "Schedule coming soon"; $("info-date").remove(); $("info-time").remove(); $("info-flag").hidden = true; return; }
+  $("info-flag").textContent = upcoming.length && (parse(current.week_date) - today) < 7*864e5 ? "THIS MOTZAI SHABBAT" : "NEXT MOTZAI SHABBAT";
+  $("info-flag").hidden = $("info-flag").textContent.startsWith("THIS");
+  $("info-parsha").textContent = current.hebrew || ("Parshat " + current.parsha);
+  $("info-date").textContent = "📅 " + longDate(current.week_date);
+  if (current.start_time) { $("info-time").textContent = "🕒 " + current.start_time; $("info-time").hidden = false; }
+  else $("info-time").hidden = true;
+}
 
 // Week lists: sponsorship spots and storyteller spots
-let chosen = null, mode = "sponsor", me = null;
-// Storyteller sign-ups: sent to the Google Form in CONFIG when it is set.
-const STORE = "dorldor-storyteller-signups";
-function localSignups() {
-  try { return JSON.parse(localStorage.getItem(STORE)) || []; } catch { return []; }
-}
-async function saveSignup(rec) {
-  const g = CONFIG.googleForm;
-  if (g.action) {
-    const body = new URLSearchParams();
-    body.set(g.name, rec.name);
-    body.set(g.phone, rec.phone);
-    body.set(g.week, longDate(rec.date) + " – Parshat " + rec.parsha);
-    // Google Forms does not report back to other pages, so a failure here
-    // means only that the request could not leave the device.
-    await fetch(g.action, { method: "POST", mode: "no-cors", body });
-  }
-  try { localStorage.setItem(STORE, JSON.stringify(localSignups().concat(rec))); } catch {}
-  memory.push(rec);
-}
-const memory = localSignups();
-
 function renderWeeks(boxId, kind) {
   const box = $(boxId);
   box.replaceChildren();
-  const weeks = upcoming.length ? upcoming : [current];
+  const list = upcoming.length ? upcoming : (current ? [current] : []);
   // Sponsored weeks leave the sponsor list (they move to the thank-you wall).
-  const shown = kind === "sponsor" ? weeks.filter(w => !w.sponsor) : weeks;
+  const shown = kind === "sponsor" ? list.filter(w => !w.sponsor) : list;
+  if (!list.length) { box.append(el("p", "note", "The schedule will be posted soon.")); return; }
   if (!shown.length) {
     const done = el("div", "all-taken", "🎉 Every week is sponsored — thank you! ");
     const a = el("a", null, "See our sponsors"); a.href = "#wall";
@@ -397,18 +366,24 @@ function renderWeeks(boxId, kind) {
     $("sponsor-note").hidden = true; return;
   }
   shown.forEach(w => {
-    const i = weeks.indexOf(w);
+    const i = list.indexOf(w);
     const row = el("div", "week");
     const d = el("div", "d");
-    const title = el("strong", null, "Motzai Shabbat, " + longDate(w.date));
+    const title = el("strong", null, "Motzai Shabbat, " + longDate(w.week_date));
     if (i === 0) title.append(el("span", "tag now", "This week"));
-    d.append(title, el("small", null, "Parshat " + w.parsha + (w.time ? " · " + w.time : "")));
+    d.append(title, el("small", null, "Parshat " + w.parsha + (w.start_time ? " · " + w.start_time : "")));
     row.append(d);
-    const mine = memory.find(r => r.date === w.date);
-    const taken = kind === "sponsor" ? w.sponsor : (w.storyteller || (mine && mine.name));
+    const myReq = (kind === "sponsor" ? mine.sponsorships : mine.storytellers).find(r => r.week_date === w.week_date);
+    const taken = kind === "sponsor" ? w.sponsor : w.storyteller;
     if (taken) {
-      const f = el("div", "filled", (kind === "sponsor" ? "✓ Sponsored by " : "✓ Storyteller: ") + taken);
+      const f = el("div", "filled", (kind === "sponsor" ? "✓ Sponsored by " : "✓ Storyteller: ") + taken + (myReq ? " (you)" : ""));
       if (kind === "sponsor" && w.dedication) f.append(el("small", null, w.dedication));
+      if (myReq && myReq.status !== "confirmed") f.append(el("small", null, "An organizer will confirm with you."));
+      row.append(f);
+    } else if (myReq) {
+      // A sponsorship request that an organizer has not confirmed yet
+      const f = el("div", "filled", "✓ Requested by you");
+      f.append(el("small", null, "An organizer will confirm with you once payment is arranged."));
       row.append(f);
     } else {
       const label = !me
@@ -428,7 +403,7 @@ function renderWeeks(boxId, kind) {
         $("f-phone-wrap").hidden = kind !== "story";
         $("f-phone").required = kind === "story";
         $("dlg-signup").hidden = kind !== "story";
-        $("dlg-week").textContent = "Motzai Shabbat, " + longDate(w.date) + " · Parshat " + w.parsha;
+        $("dlg-week").textContent = "Motzai Shabbat, " + longDate(w.week_date) + " · Parshat " + w.parsha;
         $("dlg").showModal();
       });
       row.append(b);
@@ -436,106 +411,110 @@ function renderWeeks(boxId, kind) {
     box.append(row);
   });
 }
-renderWeeks("weeks", "sponsor");
-$("shout").hidden = !(upcoming.length && !current.sponsor);
-renderWeeks("stories", "story");
 
 // Thank-you wall: every sponsored week, past and upcoming, newest first
-const wall = $("wall-box");
-const sponsored = CONFIG.weeks.filter(w => w.sponsor).sort((a, b) => parse(b.date) - parse(a.date));
-sponsored.forEach(w => {
-  const now = upcoming.length && w === current;
-  const c = el("div", "thanks" + (now ? " now" : ""));
-  if (now) c.append(el("span", "tag now", "This week"));
-  c.append(el("small", null, "Motzai Shabbat, " + longDate(w.date) + " · Parshat " + w.parsha),
-           el("strong", null, w.sponsor));
-  if (w.dedication) c.append(el("em", null, w.dedication));
-  wall.append(c);
-});
-if (!sponsored.length) {
-  const e = el("div", "wall-empty", "Our first sponsor's name will appear here. Will it be yours?");
-  const a = el("a", "btn btn-pink", "Sponsor a week"); a.href = "#sponsor";
-  e.append(el("br"), a);
-  wall.append(e);
+function renderWall() {
+  const wall = $("wall-box"); wall.replaceChildren();
+  const sponsored = weeks.filter(w => w.sponsor).sort((a, b) => parse(b.week_date) - parse(a.week_date));
+  sponsored.forEach(w => {
+    const now = upcoming.length && w === current;
+    const c = el("div", "thanks" + (now ? " now" : ""));
+    if (now) c.append(el("span", "tag now", "This week"));
+    c.append(el("small", null, "Motzai Shabbat, " + longDate(w.week_date) + " · Parshat " + w.parsha),
+             el("strong", null, w.sponsor));
+    if (w.dedication) c.append(el("em", null, w.dedication));
+    wall.append(c);
+  });
+  if (!sponsored.length) {
+    const e = el("div", "wall-empty", "Our first sponsor's name will appear here. Will it be yours?");
+    const a = el("a", "btn btn-pink", "Sponsor a week"); a.href = "#sponsor";
+    e.append(el("br"), a);
+    wall.append(e);
+  }
 }
 
 // Zelle
-const zb = $("zelle-box");
-if (CONFIG.zelle.to) {
-  const box = el("div", "zelle"), to = el("div", "to");
-  to.append(el("small", null, "Send Zelle to"), el("strong", null, CONFIG.zelle.to));
-  if (CONFIG.zelle.name) to.append(el("div", null, CONFIG.zelle.name));
-  const copy = el("button", "btn-navy", "Copy"); copy.type = "button";
-  copy.addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText(CONFIG.zelle.to); copy.textContent = "Copied ✓"; }
-    catch { copy.textContent = "Press and hold to copy"; }
-    setTimeout(() => copy.textContent = "Copy", 2000);
-  });
-  box.append(to, copy); zb.append(box);
-} else {
-  zb.append(el("div", "pending", "Zelle details are coming soon. Until then, please speak with an organizer to arrange payment."));
+function renderZelle() {
+  const zb = $("zelle-box"); zb.replaceChildren();
+  if (settings.zelle_to) {
+    const box = el("div", "zelle"), to = el("div", "to");
+    to.append(el("small", null, "Send Zelle to"), el("strong", null, settings.zelle_to));
+    if (settings.zelle_name) to.append(el("div", null, settings.zelle_name));
+    if (settings.amount) to.append(el("div", null, "Sponsorship: " + settings.amount));
+    const copy = el("button", "btn-navy", "Copy"); copy.type = "button";
+    copy.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(settings.zelle_to); copy.textContent = "Copied ✓"; }
+      catch { copy.textContent = "Press and hold to copy"; }
+      setTimeout(() => copy.textContent = "Copy", 2000);
+    });
+    box.append(to, copy); zb.append(box);
+  } else {
+    zb.append(el("div", "pending", "Zelle details are coming soon. Until then, please speak with an organizer to arrange payment."));
+  }
 }
 
-
-// Sign-up dialog: builds a pre-written text to the chosen organizer
-CONFIG.contacts.forEach(c => {
-  const b = el("button", "btn-pink", "Text " + c.name.split(" ")[0]); b.type = "button";
-  b.addEventListener("click", () => {
-    const form = $("dlg-form");
-    if (!form.reportValidity()) return;
-    const ded = $("f-ded").value.trim();
-    const when = "Motzai Shabbat, " + longDate(chosen.date) + " (Parshat " + chosen.parsha + ").";
-    const msg = "Hi " + c.name.split(" ")[0] + ", this is " + $("f-name").value.trim() +
-      (mode === "sponsor"
-        ? ". I would like to sponsor Dor L'Dor on " + when + (ded ? " Dedication: " + ded : "")
-        : ". I would like to tell the story at Dor L'Dor on " + when);
-    location.href = "sms:" + digits(c.phone) + "?&body=" + encodeURIComponent(msg);
-    $("dlg").close();
-    if (mode === "sponsor") $("pay").scrollIntoView();
+// Sponsor dialog: saves the request, then opens a pre-written text to the chosen organizer
+function renderContacts() {
+  const send = $("dlg-send"); send.replaceChildren();
+  contacts.filter(c => c.phone).forEach(c => {
+    const b = el("button", "btn-pink", "Text " + c.name.split(" ")[0]); b.type = "button";
+    b.addEventListener("click", async () => {
+      const form = $("dlg-form");
+      if (!form.reportValidity()) return;
+      const sponsor_name = $("f-name").value.trim(), dedication = $("f-ded").value.trim();
+      const { error } = await db.from("sponsorships").insert({ week_date: chosen.week_date, sponsor_name, dedication });
+      if (error) {
+        alert(error.code === "23505" ? "Sorry — someone has just requested this week. Please pick another."
+                                     : "Sorry — your request did not save. Please try again or speak with an organizer.");
+        return;
+      }
+      const when = "Motzai Shabbat, " + longDate(chosen.week_date) + " (Parshat " + chosen.parsha + ").";
+      const msg = "Hi " + c.name.split(" ")[0] + ", this is " + sponsor_name +
+        ". I would like to sponsor Dor L'Dor on " + when + (dedication ? " Dedication: " + dedication : "");
+      $("dlg").close();
+      await refresh();
+      $("pay").scrollIntoView();
+      location.href = "sms:" + digits(c.phone) + "?&body=" + encodeURIComponent(msg);
+    });
+    send.append(b);
   });
-  $("dlg-send").append(b);
-});
+  if (!send.children.length) send.append(el("p", "note", "Organizer contacts are coming soon."));
+}
+
+// Storyteller sign-up
 $("dlg-signup").addEventListener("click", async () => {
   const phone = $("f-phone"), name = $("f-name").value.trim();
   phone.setCustomValidity(phone.value.replace(/\D/g, "").length >= 10 ? "" : "Please enter a 10-digit phone number");
   if (!$("dlg-form").reportValidity()) return;
   const thanks = $("story-thanks");
-  try {
-    await saveSignup({ type: "storyteller", date: chosen.date, parsha: chosen.parsha,
-      name, phone: phone.value.trim(), submitted: new Date().toISOString() });
+  const { error } = await db.from("storytellers").insert({ week_date: chosen.week_date, full_name: name, phone: phone.value.trim() });
+  if (error) {
+    thanks.textContent = error.code === "23505"
+      ? "Sorry — someone has just taken that week. Please pick another."
+      : "Sorry — your sign-up did not go through. Please speak with an organizer.";
+  } else {
     thanks.textContent = "🎟️ Thank you, " + name + "! You are signed up to tell the story on Motzai Shabbat, " +
-      longDate(chosen.date) + ". An organizer will confirm with you.";
+      longDate(chosen.week_date) + ". An organizer will confirm with you.";
     $("dlg-form").reset();
-    renderWeeks("stories", "story");
-  } catch {
-    thanks.textContent = "Sorry — your sign-up did not go through. Please speak with an organizer.";
+    await refresh();
   }
   thanks.hidden = false;
   $("dlg").close();
 });
+
 // RSVP head-count for the current week
 $("rsvp-form").addEventListener("submit", async e => {
   e.preventDefault();
-  const name = $("r-name").value.trim(), kids = Number($("r-kids").value), g = CONFIG.rsvpForm;
-  const rec = { type: "rsvp", date: current.date, parsha: current.parsha, name, kids, submitted: new Date().toISOString() };
+  const name = $("r-name").value.trim(), kids = Number($("r-kids").value);
   const thanks = $("rsvp-thanks");
-  try {
-    if (g.action) {
-      const body = new URLSearchParams();
-      body.set(g.name, name); body.set(g.kids, kids);
-      body.set(g.week, longDate(current.date) + " – Parshat " + current.parsha);
-      await fetch(g.action, { method: "POST", mode: "no-cors", body });
-    }
-    try {
-      const all = JSON.parse(localStorage.getItem("dorldor-rsvps")) || [];
-      localStorage.setItem("dorldor-rsvps", JSON.stringify(all.concat(rec)));
-    } catch {}
+  const { error } = current ? await db.from("rsvps").insert({ week_date: current.week_date, parent_name: name, kids }) : { error: true };
+  if (error) {
+    thanks.textContent = "Sorry — that did not go through. Please just come, or speak with an organizer.";
+  } else {
     thanks.textContent = "🍕 Thank you, " + name + "! We are counting on " + kids + (kids === 1 ? " kid" : " kids") +
-      " for Motzai Shabbat, " + longDate(current.date) + ". See you there!";
+      " for Motzai Shabbat, " + longDate(current.week_date) + ". See you there!";
     $("rsvp-form").reset();
     if (me) $("r-name").value = Auth.displayName(me);
-  } catch {
-    thanks.textContent = "Sorry — that did not go through. Please just come, or speak with an organizer.";
   }
   thanks.hidden = false;
 });
@@ -549,30 +528,49 @@ function needSignIn(hash) {
   location.href = "signin.html?next=" + encodeURIComponent(hash);
   return true;
 }
-Auth.user().then(u => {
-  me = u;
-  if (!u) return;
-  const name = Auth.displayName(u), a = $("nav-auth");
+function renderSignedIn() {
+  if (!me) return;
+  const name = Auth.displayName(me), a = $("nav-auth");
   a.textContent = "Sign out (" + name.split(" ")[0] + ")";
   a.href = "#";
-  a.addEventListener("click", async e => { e.preventDefault(); await Auth.signOut(); location.reload(); });
+  a.onclick = async e => { e.preventDefault(); await Auth.signOut(); location.reload(); };
   $("r-name").value = name;
   $("nav-profile").hidden = false;
   // Only organizers can read the organizers table, so a row back means "show the link".
-  Auth.client().then(c => c.from("organizers").select("user_id").eq("user_id", u.id).maybeSingle())
+  db.from("organizers").select("user_id").eq("user_id", me.id).maybeSingle()
     .then(r => { if (r && r.data) $("nav-admin").hidden = false; }).catch(() => {});
-  if (Auth.phoneOf(u)) $("f-phone").value = Auth.phoneOf(u);
-  renderWeeks("weeks", "sponsor");
-  renderWeeks("stories", "story");
+  if (Auth.phoneOf(me)) $("f-phone").value = Auth.phoneOf(me);
   $("promo-note").textContent = "You're logged in.";
   $("promo-btn").textContent = "Sign up to tell a story";
   $("promo-btn").href = "#story";
+}
+
+function render() {
+  renderInfo();
+  renderWeeks("weeks", "sponsor");
+  $("shout").hidden = !(upcoming.length && current && !current.sponsor);
+  renderWeeks("stories", "story");
+  renderWall();
+  renderZelle();
+  renderContacts();
+}
+async function refresh() { await loadAll(); render(); }
+
+(async () => {
   try {
-    const next = sessionStorage.getItem("dorldor-next");
-    sessionStorage.removeItem("dorldor-next");
-    if (next && $(next)) $(next).scrollIntoView();
-  } catch {}
-}).catch(() => {});
+    await loadAll();
+    render();
+    renderSignedIn();
+    try {
+      const next = sessionStorage.getItem("dorldor-next");
+      sessionStorage.removeItem("dorldor-next");
+      if (next && $(next)) $(next).scrollIntoView();
+    } catch {}
+  } catch {
+    $("info-parsha").textContent = "Sorry — the page could not load. Please refresh.";
+    $("info-flag").hidden = true;
+  }
+})();
 </script>
 </body>
 </html>
