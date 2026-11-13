@@ -49,6 +49,17 @@
   .msg{border-radius:14px;padding:12px 14px;margin:14px 0 0;font-weight:700;text-align:center}
   .msg.info{background:#fff3c4} .msg.ok{background:#d9f5ee} .msg.err{background:#ffe0ea}
   .foot{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:22px}
+  .kid{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px dashed #dbe3f5}
+  .kid:last-child{border-bottom:0}
+  .kid .n{flex:1;font-weight:700}
+  .kid .n small{display:block;color:var(--muted);font-weight:600}
+  .kid button{padding:8px 14px;font-size:14px}
+  .kid-add{display:flex;gap:8px;align-items:flex-end;margin-top:12px}
+  .kid-add .grow{flex:1 1 140px}
+  .kid-add .sm{flex:0 1 110px}
+  .kid-add label{margin-top:0}
+  .kid-add button{background:var(--teal);color:#fff;white-space:nowrap}
+  @media (max-width:480px){.kid-add{flex-wrap:wrap}.kid-add .grow,.kid-add .sm,.kid-add button{flex:1 1 100%}}
 </style>
 </head>
 <body>
@@ -75,6 +86,18 @@
         <button class="save" type="submit">Save my details</button>
         <div class="msg" id="msg" role="status" hidden></div>
       </form>
+    </div>
+
+    <div class="card">
+      <h2>My kids</h2>
+      <div id="kids"></div>
+      <form class="kid-add" id="f-kid" novalidate>
+        <div class="grow"><label for="k-name">Child's first name</label><input id="k-name" maxlength="60" autocomplete="off"></div>
+        <div class="sm"><label for="k-grade">Grade (optional)</label><input id="k-grade" maxlength="20" placeholder="e.g. 3rd"></div>
+        <button type="submit">+ Add</button>
+      </form>
+      <div class="hint">Each child on your account earns raffle tickets when you tell a story and when they are pre-registered for the week.</div>
+      <div class="msg" id="kid-msg" role="status" hidden></div>
     </div>
 
     <div class="card">
@@ -135,7 +158,30 @@
     const pl = $("sponsorships"); pl.replaceChildren();
     if (spons.length) spons.forEach(r => pl.append(li("Motzai Shabbat, " + longDate(r.week_date), parsha(r.week_date) + (r.dedication ? " · " + r.dedication : "") + note(r))));
     else pl.replaceWith(Object.assign(empty("No sponsorships yet.", "index.html#sponsor", "Sponsor a week"), { id: "sponsorships" }));
+    await loadKids(u);
     $("content").hidden = false;
+  }
+
+  // Kids on this account
+  const ksay = (t, kind) => { const m = $("kid-msg"); m.textContent = t; m.className = "msg " + kind; m.hidden = false; setTimeout(() => m.hidden = true, 3000); };
+  async function loadKids(u) {
+    const { data, error } = await db.from("kids").select("id,first_name,grade").eq("parent_id", u.id).order("created_at");
+    const box = $("kids"); box.replaceChildren();
+    if (error) { box.append(Object.assign(document.createElement("p"), { className: "empty", textContent: "Could not load your kids. Please refresh." })); return; }
+    if (!data.length) { box.append(Object.assign(document.createElement("p"), { className: "empty", textContent: "No kids added yet." })); return; }
+    data.forEach(k => {
+      const row = document.createElement("div"); row.className = "kid";
+      const n = document.createElement("div"); n.className = "n"; n.textContent = k.first_name;
+      if (k.grade) { const g = document.createElement("small"); g.textContent = "Grade " + k.grade; n.append(g); }
+      const rm = document.createElement("button"); rm.type = "button"; rm.className = "ghost"; rm.textContent = "Remove";
+      rm.onclick = async () => {
+        if (!confirm("Remove " + k.first_name + " from your account?")) return;
+        const { error } = await db.from("kids").delete().eq("id", k.id);
+        if (error) return ksay("Could not remove. Please try again.", "err");
+        loadKids(u);
+      };
+      row.append(n, rm); box.append(row);
+    });
   }
 
   if (!Auth.configured) {
@@ -156,6 +202,18 @@
       try { const u = await Auth.updateProfile(name, phone); say("Saved.", "ok"); }
       catch { say("Sorry — your details could not be saved. Please try again.", "err"); }
       b.disabled = false;
+    };
+    $("f-kid").onsubmit = async e => {
+      e.preventDefault();
+      const first_name = $("k-name").value.trim(), grade = $("k-grade").value.trim().replace(/^grade\s*/i, "");
+      if (!first_name) return ksay("Please enter your child's first name.", "err");
+      const b = e.target.querySelector("button"); b.disabled = true;
+      const { error } = await db.from("kids").insert({ first_name, grade });
+      b.disabled = false;
+      if (error) return ksay("Could not add. Please try again.", "err");
+      e.target.reset(); $("k-name").focus();
+      const u = await Auth.user(); loadKids(u);
+      ksay(first_name + " added.", "ok");
     };
     $("signout").onclick = async () => { await Auth.signOut(); location.href = "index.html"; };
   }
