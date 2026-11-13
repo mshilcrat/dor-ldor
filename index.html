@@ -112,6 +112,9 @@
   .rsvp label{margin-top:8px}
   #r-kids{width:140px}
   #rsvp-thanks{margin:14px 0 0}
+  #raffle-promo{padding-top:0}
+  .promo{font-size:clamp(17px,2.6vw,20px);padding:18px}
+  .promo-cta{margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;font-size:16px}
   .raffle{background:var(--yellow);color:var(--navy);border-radius:16px;padding:14px 16px;font-weight:700;
     text-align:center;font-size:18px;margin-bottom:6px}
   .note{color:var(--muted);font-size:14px;margin-top:12px}
@@ -188,6 +191,14 @@
       </div>
       <div class="place">Cong. Zichron R' Moshe Feinstein<br>6315 Strickland Avenue</div>
       <div class="invite">Bring a friend, chavruta, parent or relative!<br>Just come—let's fill the room!</div>
+    </div>
+  </section>
+
+  <section id="raffle-promo">
+    <div class="raffle promo">
+      <div>🎟️ Sign up to tell a story and earn an <strong>extra ticket</strong> for the end-of-season <strong>Special Super Mega Raffle!</strong></div>
+      <div class="promo-cta"><span id="promo-note"></span>
+        <a class="btn btn-navy" id="promo-btn" href="signin.html?next=%23story">Log in to sign up</a></div>
     </div>
   </section>
 
@@ -543,6 +554,9 @@ Auth.user().then(u => {
   $("r-name").value = name;
   renderWeeks("weeks", "sponsor");
   renderWeeks("stories", "story");
+  $("promo-note").textContent = "You're logged in.";
+  $("promo-btn").textContent = "Sign up to tell a story";
+  $("promo-btn").href = "#story";
   try {
     const next = sessionStorage.getItem("dorldor-next");
     sessionStorage.removeItem("dorldor-next");
