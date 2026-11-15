@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Fast start: open the database connection and fetch the scripts while the page is still loading -->
+<link rel="preconnect" href="https://qbaruefuwmsxpurjrcer.supabase.co" crossorigin>
+<link rel="preload" as="script" href="auth.js">
+<link rel="preload" as="script" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
 <title>Dor L'Dor – Avos U'Banim | Mill Basin</title>
 <style>
   @font-face{font-family:"Fredoka";font-weight:300 700;font-display:swap;
@@ -327,17 +331,41 @@ let weeks = [], upcoming = [], current = null, settings = {}, contacts = [];
 let mine = { sponsorships: [], storytellers: [], kids: [], kidRsvps: [] };   // this account's own records
 let chosen = null, mode = "sponsor";
 
-async function loadAll() {
-  db = await Auth.client();
-  const [board, st, u] = await Promise.all([
-    db.rpc("get_week_board"),
-    db.from("site_settings").select("*").eq("id", 1).maybeSingle(),
-    Auth.user()
+// Fast start: the public schedule is requested directly, the moment the page opens,
+// without waiting for the sign-in library. Last visit's copy is shown meanwhile.
+const CACHE = "dorldor-board";
+function fetchPublic() {
+  const base = DORLDOR_SUPABASE.url + "/rest/v1/", key = DORLDOR_SUPABASE.anonKey;
+  const headers = { apikey: key, Authorization: "Bearer " + key, "Content-Type": "application/json" };
+  const ok = r => r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status));
+  return Promise.all([
+    fetch(base + "rpc/get_week_board", { method: "POST", headers, body: "{}" }).then(ok),
+    fetch(base + "site_settings?select=*&id=eq.1", { headers }).then(ok).then(a => a[0] || {})
   ]);
-  if (board.error) throw board.error;
-  weeks = board.data || [];
-  settings = st.data || {};
+}
+function usePublic(board, st) {
+  weeks = board || [];
+  settings = st || {};
   contacts = Array.isArray(settings.contacts) ? settings.contacts : [];
+  upcoming = weeks.filter(w => parse(w.week_date) >= today);
+  current = upcoming[0] || weeks[weeks.length - 1] || null;
+}
+
+async function loadAll(pub) {
+  const pubP = (pub || fetchPublic()).catch(() => null);
+  db = await Auth.client();
+  let [data, u] = await Promise.all([pubP, Auth.user()]);
+  if (!data) {
+    // The direct request did not get through — ask through the library instead.
+    const [board, st] = await Promise.all([
+      db.rpc("get_week_board"),
+      db.from("site_settings").select("*").eq("id", 1).maybeSingle()
+    ]);
+    if (board.error) throw board.error;
+    data = [board.data || [], st.data || {}];
+  }
+  usePublic(data[0], data[1]);
+  try { localStorage.setItem(CACHE, JSON.stringify(data)); } catch {}
   me = u;
   if (me) {
     const [s, t, k, kr] = await Promise.all([
@@ -348,8 +376,6 @@ async function loadAll() {
     ]);
     mine = { sponsorships: s.data || [], storytellers: t.data || [], kids: k.data || [], kidRsvps: kr.data || [] };
   }
-  upcoming = weeks.filter(w => parse(w.week_date) >= today);
-  current = upcoming[0] || weeks[weeks.length - 1] || null;
 }
 
 // This week
@@ -557,6 +583,7 @@ $("rsvp-form").addEventListener("submit", async e => {
   e.preventDefault();
   const name = $("r-name").value.trim(), kids = Number($("r-kids").value);
   const thanks = $("rsvp-thanks");
+  if (!db) db = await Auth.client();
   const { error } = current ? await db.from("rsvps").insert({ week_date: current.week_date, parent_name: name, kids }) : { error: true };
   if (error) {
     thanks.textContent = "Sorry — that did not go through. Please just come, or speak with an organizer.";
@@ -608,8 +635,22 @@ function render() {
 async function refresh() { await loadAll(); render(); }
 
 (async () => {
+  const pub = fetchPublic();
+  // First paint from public data alone (last visit's copy, then the fresh one).
+  // A visitor who looks signed in gets only the parts that are the same for everyone
+  // until their account has loaded.
+  let done = false, maybeSignedIn = false;
+  try { maybeSignedIn = Object.keys(localStorage).some(k => /^sb-.+-auth-token/.test(k)); } catch {}
+  const paint = d => {
+    if (done || !Array.isArray(d) || !(d[0] || []).length) return;
+    usePublic(d[0], d[1]);
+    if (maybeSignedIn) { renderInfo(); renderWall(); renderZelle(); } else render();
+  };
+  try { paint(JSON.parse(localStorage.getItem(CACHE))); } catch {}
+  pub.then(paint).catch(() => {});
   try {
-    await loadAll();
+    await loadAll(pub);
+    done = true;
     render();
     renderSignedIn();
     try {
