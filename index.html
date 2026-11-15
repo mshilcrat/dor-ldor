@@ -253,7 +253,8 @@
     <div class="card">
       <div class="shout" id="shout" hidden><div class="s1">NO SPONSOR YET!</div><div class="s2">WILL YOU SPONSOR THIS WEEK?</div></div>
       <div id="weeks"></div>
-      <p class="note" id="sponsor-note">Log in, then tap an open week to reserve it. Your request is sent by text to the organizer, who confirms and marks the week as sponsored.</p>
+      <div class="raffle" id="sponsor-thanks" role="status" hidden></div>
+      <p class="note" id="sponsor-note">Log in, then tap an open week to reserve it. Your sponsorship is recorded for the organizers, who confirm it and mark the week as sponsored.</p>
     </div>
   </section>
 
@@ -301,11 +302,8 @@
       <label for="f-phone">Phone number</label>
       <input id="f-phone" type="tel" autocomplete="tel" inputmode="tel">
     </div>
-    <div id="send-wrap">
-      <label>Send my request to</label>
-      <div class="actions" id="dlg-send"></div>
-    </div>
     <div class="actions">
+      <button type="button" class="btn-pink" id="dlg-sponsor">Sponsor this week</button>
       <button type="button" class="btn-pink" id="dlg-signup">Sign me up</button>
       <button type="button" class="btn-ghost" id="dlg-close">Cancel</button>
     </div>
@@ -413,7 +411,7 @@ function renderWeeks(boxId, kind) {
         chosen = w; mode = kind;
         $("dlg-title").textContent = kind === "sponsor" ? "Sponsor this week" : "Tell the story this week";
         $("f-ded-wrap").hidden = kind !== "sponsor";
-        $("send-wrap").hidden = kind !== "sponsor";
+        $("dlg-sponsor").hidden = kind !== "sponsor";
         $("f-phone-wrap").hidden = kind !== "story";
         $("f-phone").required = kind === "story";
         $("dlg-signup").hidden = kind !== "story";
@@ -467,33 +465,25 @@ function renderZelle() {
   }
 }
 
-// Sponsor dialog: saves the request, then opens a pre-written text to the chosen organizer
-function renderContacts() {
-  const send = $("dlg-send"); send.replaceChildren();
-  contacts.filter(c => c.phone).forEach(c => {
-    const b = el("button", "btn-pink", "Text " + c.name.split(" ")[0]); b.type = "button";
-    b.addEventListener("click", async () => {
-      const form = $("dlg-form");
-      if (!form.reportValidity()) return;
-      const sponsor_name = $("f-name").value.trim(), dedication = $("f-ded").value.trim();
-      const { error } = await db.from("sponsorships").insert({ week_date: chosen.week_date, sponsor_name, dedication });
-      if (error) {
-        alert(error.code === "23505" ? "Sorry — someone has just requested this week. Please pick another."
-                                     : "Sorry — your request did not save. Please try again or speak with an organizer.");
-        return;
-      }
-      const when = "Motzai Shabbat, " + longDate(chosen.week_date) + " (Parshat " + chosen.parsha + ").";
-      const msg = "Hi " + c.name.split(" ")[0] + ", this is " + sponsor_name +
-        ". I would like to sponsor Dor L'Dor on " + when + (dedication ? " Dedication: " + dedication : "");
-      $("dlg").close();
-      await refresh();
-      $("pay").scrollIntoView();
-      location.href = "sms:" + digits(c.phone) + "?&body=" + encodeURIComponent(msg);
-    });
-    send.append(b);
-  });
-  if (!send.children.length) send.append(el("p", "note", "Organizer contacts are coming soon."));
-}
+// Sponsor dialog: records the sponsorship for the organizers (shown on the admin page)
+$("dlg-sponsor").addEventListener("click", async () => {
+  if (!$("dlg-form").reportValidity()) return;
+  const sponsor_name = $("f-name").value.trim(), dedication = $("f-ded").value.trim();
+  const thanks = $("sponsor-thanks");
+  const { error } = await db.from("sponsorships").insert({ week_date: chosen.week_date, sponsor_name, dedication });
+  if (error) {
+    thanks.textContent = error.code === "23505"
+      ? "Sorry — someone has just requested this week. Please pick another."
+      : "Sorry — your sponsorship did not save. Please try again or speak with an organizer.";
+  } else {
+    thanks.textContent = "Thank you, " + sponsor_name + "! Your sponsorship for Motzai Shabbat, " +
+      longDate(chosen.week_date) + " is recorded. An organizer will confirm with you once payment is arranged.";
+    $("dlg-form").reset();
+    await refresh();
+  }
+  thanks.hidden = false;
+  $("dlg").close();
+});
 
 // Storyteller sign-up
 $("dlg-signup").addEventListener("click", async () => {
@@ -612,7 +602,6 @@ function render() {
   renderWeeks("stories", "story");
   renderWall();
   renderZelle();
-  renderContacts();
   const nudge = $("kid-nudge"); if (nudge) nudge.remove();
   renderKidRsvp();
 }
