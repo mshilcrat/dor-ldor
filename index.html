@@ -475,7 +475,7 @@ function renderWall() {
 function renderZelle() {
   const zb = $("zelle-box"); zb.replaceChildren();
   if (settings.zelle_to) {
-    zb.append(el("div", "pending", "If you wish to pay by Zelle, the number is " + settings.zelle_to));
+    zb.append(el("div", "pending", "If you wish to pay by Zelle, please send your payment to " + settings.zelle_to + ". Kindly include your name in the memo so we can record your sponsorship, and feel free to reach out to an organizer with any questions."));
   } else {
     zb.append(el("div", "pending", "Zelle details are coming soon. Until then, please speak with an organizer to arrange payment."));
   }
