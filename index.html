@@ -475,11 +475,7 @@ function renderWall() {
 function renderZelle() {
   const zb = $("zelle-box"); zb.replaceChildren();
   if (settings.zelle_to) {
-    const box = el("div", "zelle"), to = el("div", "to");
-    to.append(el("small", null, "Send Zelle to"), el("strong", null, settings.zelle_to));
-    if (settings.zelle_name) to.append(el("div", null, settings.zelle_name));
-    if (settings.amount) to.append(el("div", null, "Sponsorship: " + settings.amount));
-    box.append(to); zb.append(box);
+    zb.append(el("div", "pending", "The Zelle number is " + settings.zelle_to));
   } else {
     zb.append(el("div", "pending", "Zelle details are coming soon. Until then, please speak with an organizer to arrange payment."));
   }
