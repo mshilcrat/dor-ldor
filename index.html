@@ -479,13 +479,7 @@ function renderZelle() {
     to.append(el("small", null, "Send Zelle to"), el("strong", null, settings.zelle_to));
     if (settings.zelle_name) to.append(el("div", null, settings.zelle_name));
     if (settings.amount) to.append(el("div", null, "Sponsorship: " + settings.amount));
-    const copy = el("button", "btn-navy", "Copy"); copy.type = "button";
-    copy.addEventListener("click", async () => {
-      try { await navigator.clipboard.writeText(settings.zelle_to); copy.textContent = "Copied ✓"; }
-      catch { copy.textContent = "Press and hold to copy"; }
-      setTimeout(() => copy.textContent = "Copy", 2000);
-    });
-    box.append(to, copy); zb.append(box);
+    box.append(to); zb.append(box);
   } else {
     zb.append(el("div", "pending", "Zelle details are coming soon. Until then, please speak with an organizer to arrange payment."));
   }
