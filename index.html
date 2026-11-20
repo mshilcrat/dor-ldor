@@ -273,7 +273,7 @@
       <div class="raffle">🎟️ Sign up to tell a story and earn an <strong>extra ticket</strong> for the end-of-season <strong>Special Super Mega Raffle!</strong></div>
       <div id="stories"></div>
       <div class="raffle" id="story-thanks" role="status" hidden></div>
-      <p class="note">Tap an open week and enter your name and phone number. An organizer will confirm with you. <span id="story-login">To earn the raffle tickets for your kids, <a href="signin.html?next=%23story">log in</a> first.</span></p>
+      <p class="note">Tap an open week and enter your name and phone number. An organizer will confirm with you. <span id="story-login">Have an account? You can <a href="signin.html?next=%23story">log in</a> first if you like.</span></p>
     </div>
   </section>
 
@@ -297,7 +297,7 @@
   <form method="dialog" id="dlg-form">
     <h3 id="dlg-title">Sponsor this week</h3>
     <p id="dlg-week"></p>
-    <label for="f-name">Your name</label>
+    <label for="f-name" id="f-name-label">Your name</label>
     <input id="f-name" required autocomplete="name">
     <div id="f-ded-wrap">
       <label for="f-ded">Dedication (optional)</label>
@@ -445,6 +445,8 @@ function renderWeeks(boxId, kind) {
         if (me && !$("f-name").value) $("f-name").value = Auth.displayName(me);
         chosen = w; mode = kind;
         $("dlg-title").textContent = kind === "sponsor" ? "Sponsor this week" : "Tell the story this week";
+        $("f-name-label").textContent = kind === "story" ? "First and last name" : "Your name";
+        $("f-name").setCustomValidity("");
         $("f-ded-wrap").hidden = kind !== "sponsor";
         $("dlg-sponsor").hidden = kind !== "sponsor";
         // Sponsoring needs no account; without one, a phone number is how the organizers reach the sponsor.
@@ -518,7 +520,9 @@ $("dlg-sponsor").addEventListener("click", async () => {
 
 // Storyteller sign-up
 $("dlg-signup").addEventListener("click", async () => {
-  const phone = $("f-phone"), name = $("f-name").value.trim();
+  const phone = $("f-phone"), name = $("f-name").value.trim().replace(/\s+/g, " ");
+  // The organizers hand out raffle tickets by name, so a last name is needed.
+  $("f-name").setCustomValidity(name.split(" ").length >= 2 ? "" : "Please enter your first and last name");
   phone.setCustomValidity(phone.value.replace(/\D/g, "").length >= 10 ? "" : "Please enter a 10-digit phone number");
   if (!$("dlg-form").reportValidity()) return;
   const thanks = $("story-thanks");

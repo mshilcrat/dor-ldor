@@ -120,6 +120,9 @@
       <div class="big"><b id="raffle-total">0</b><span id="raffle-total-text"></span></div>
       <div id="raffle"></div>
       <p class="hint">Each child gets 1 ticket for every story their parent tells (once confirmed) and 1 for every 2 weeks in a row they were pre-registered. Tickets count once the week arrives.</p>
+      <h3 style="margin-top:22px">Storytellers without an account</h3>
+      <div id="raffle-guests"></div>
+      <p class="hint">Type how many tickets each one gets. It saves when you leave the box.</p>
     </div>
 
     <div class="card" id="tab-people" hidden>
@@ -268,7 +271,7 @@ function renderStories() {
       title.append(el("span", "tag " + (ok ? "ok" : "pending"), ok ? "Confirmed" : "Pending"));
       d.append(el("strong", null, r.full_name));
       const s = el("small"), a = el("a", null, r.phone); a.href = "tel:" + r.phone.replace(/[^\d+]/g, ""); s.append(a);
-      if (!r.user_id) s.append(" · no account (no raffle tickets)");
+      if (!r.user_id) s.append(" · no account");
       d.append(s);
       if (!ok) acts.append(btn("teal", "Confirm", () =>
         act(db.from("storytellers").update({ status: "confirmed" }).eq("id", r.id), "Confirmed.")));
@@ -322,9 +325,31 @@ function renderRsvps() {
 
 function renderRaffle() {
   const box = $("raffle"); box.replaceChildren();
-  const total = S.tickets.reduce((n, t) => n + t.total, 0);
+  // Storytellers with no account: an organizer types in how many tickets each one gets.
+  const guests = S.storytellers.filter(s => !s.user_id).sort((a, b) => a.week_date < b.week_date ? -1 : 1);
+  const guestTotal = guests.reduce((n, g) => n + (g.tickets || 0), 0);
+  const total = S.tickets.reduce((n, t) => n + t.total, 0) + guestTotal;
   $("raffle-total").textContent = total;
-  $("raffle-total-text").textContent = (total === 1 ? "ticket" : "tickets") + " in the Special Super Mega Raffle, across " + S.tickets.length + (S.tickets.length === 1 ? " child" : " children") + ".";
+  $("raffle-total-text").textContent = (total === 1 ? "ticket" : "tickets") + " in the Special Super Mega Raffle, across " + S.tickets.length + (S.tickets.length === 1 ? " child" : " children") +
+    (guests.length ? " and " + guests.length + (guests.length === 1 ? " storyteller" : " storytellers") + " without an account" : "") + ".";
+  const gbox = $("raffle-guests"); gbox.replaceChildren();
+  guests.forEach(g => {
+    const row = el("div", "row"), d = el("div", "d"), acts = el("div", "acts");
+    const title = el("strong", null, g.full_name);
+    if (g.status !== "confirmed") title.append(el("span", "tag pending", "Story not confirmed"));
+    const sm = el("small", null, "Story on " + longDate(g.week_date) + " · "), a = el("a", null, g.phone);
+    a.href = "tel:" + g.phone.replace(/[^\d+]/g, ""); sm.append(a);
+    d.append(title, sm);
+    const n = el("input"); n.type = "number"; n.min = 0; n.max = 999; n.step = 1; n.value = g.tickets || 0;
+    n.style.width = "80px"; n.setAttribute("aria-label", "Tickets for " + g.full_name);
+    n.addEventListener("change", () => {
+      const v = Math.max(0, Math.min(999, Math.floor(Number(n.value) || 0)));
+      act(db.from("storytellers").update({ tickets: v }).eq("id", g.id), "Saved: " + v + (v === 1 ? " ticket" : " tickets") + " for " + g.full_name + ".");
+    });
+    acts.append(n, el("span", null, " tickets"));
+    row.append(d, acts); gbox.append(row);
+  });
+  if (!guests.length) gbox.append(el("p", "empty", "No one has signed up to tell a story without an account yet."));
   S.tickets.forEach(t => {
     const p = person(t.parent_id), row = el("div", "row"), d = el("div", "d");
     const title = el("strong", null, t.first_name + (t.grade ? " · Grade " + t.grade : ""));
