@@ -267,7 +267,9 @@ function renderStories() {
       if (!ok) pending++;
       title.append(el("span", "tag " + (ok ? "ok" : "pending"), ok ? "Confirmed" : "Pending"));
       d.append(el("strong", null, r.full_name));
-      const s = el("small"), a = el("a", null, r.phone); a.href = "tel:" + r.phone.replace(/[^\d+]/g, ""); s.append(a); d.append(s);
+      const s = el("small"), a = el("a", null, r.phone); a.href = "tel:" + r.phone.replace(/[^\d+]/g, ""); s.append(a);
+      if (!r.user_id) s.append(" · no account (no raffle tickets)");
+      d.append(s);
       if (!ok) acts.append(btn("teal", "Confirm", () =>
         act(db.from("storytellers").update({ status: "confirmed" }).eq("id", r.id), "Confirmed.")));
       acts.append(btn("ghost", "Remove", () => {

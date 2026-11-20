@@ -214,7 +214,7 @@
     <div class="raffle promo">
       <div>🎟️ Sign up to tell a story and earn an <strong>extra ticket</strong> for the end-of-season <strong>Special Super Mega Raffle!</strong></div>
       <div class="promo-cta"><span id="promo-note"></span>
-        <a class="btn btn-navy" id="promo-btn" href="signin.html?next=%23story">Log in to sign up</a></div>
+        <a class="btn btn-navy" id="promo-btn" href="#story">Sign up to tell a story</a></div>
     </div>
   </section>
 
@@ -273,7 +273,7 @@
       <div class="raffle">🎟️ Sign up to tell a story and earn an <strong>extra ticket</strong> for the end-of-season <strong>Special Super Mega Raffle!</strong></div>
       <div id="stories"></div>
       <div class="raffle" id="story-thanks" role="status" hidden></div>
-      <p class="note">Log in, then tap an open week and enter your name and phone number. An organizer will confirm with you.</p>
+      <p class="note">Tap an open week and enter your name and phone number. An organizer will confirm with you. <span id="story-login">To earn the raffle tickets for your kids, <a href="signin.html?next=%23story">log in</a> first.</span></p>
     </div>
   </section>
 
@@ -340,8 +340,14 @@ function fetchPublic() {
   const ok = r => r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status));
   return Promise.all([
     fetch(base + "rpc/get_week_board", { method: "POST", headers, body: "{}" }).then(ok),
-    fetch(base + "site_settings?select=*&id=eq.1", { headers }).then(ok).then(a => a[0] || {})
-  ]);
+    fetch(base + "site_settings?select=*&id=eq.1", { headers }).then(ok).then(a => a[0] || {}),
+    fetch(base + "rpc/storyteller_weeks_taken", { method: "POST", headers, body: "{}" }).then(ok)
+  ]).then(([board, st, taken]) => [markStories(board, taken), st]);
+}
+// Flags the weeks whose storyteller spot is already reserved (confirmed or not).
+function markStories(board, taken) {
+  const set = new Set((taken || []).map(t => typeof t === "string" ? t : t && (t.storyteller_weeks_taken || t.week_date)));
+  return (board || []).map(w => Object.assign({}, w, { story_requested: set.has(w.week_date) }));
 }
 function usePublic(board, st) {
   weeks = board || [];
@@ -357,12 +363,13 @@ async function loadAll(pub) {
   let [data, u] = await Promise.all([pubP, Auth.user()]);
   if (!data) {
     // The direct request did not get through — ask through the library instead.
-    const [board, st] = await Promise.all([
+    const [board, st, taken] = await Promise.all([
       db.rpc("get_week_board"),
-      db.from("site_settings").select("*").eq("id", 1).maybeSingle()
+      db.from("site_settings").select("*").eq("id", 1).maybeSingle(),
+      db.rpc("storyteller_weeks_taken")
     ]);
     if (board.error) throw board.error;
-    data = [board.data || [], st.data || {}];
+    data = [markStories(board.data, taken.data), st.data || {}];
   }
   usePublic(data[0], data[1]);
   try { localStorage.setItem(CACHE, JSON.stringify(data)); } catch {}
@@ -394,13 +401,14 @@ function renderWeeks(boxId, kind) {
   const box = $(boxId);
   box.replaceChildren();
   const list = upcoming.length ? upcoming : (current ? [current] : []);
-  // A week leaves the sponsor list as soon as it is requested (once confirmed it
-  // shows on the thank-you wall). The person who requested it still sees their own.
+  // A week leaves its list as soon as it is reserved; an organizer confirms it afterwards
+  // (a confirmed sponsor then shows on the thank-you wall). Whoever reserved it still sees their own.
   const shown = kind === "sponsor"
     ? list.filter(w => !w.sponsor && (!w.requested || mine.sponsorships.some(r => r.week_date === w.week_date)))
-    : list;
+    : list.filter(w => !(w.storyteller || w.story_requested) || mine.storytellers.some(r => r.week_date === w.week_date));
   if (!list.length) { box.append(el("p", "note", "The schedule will be posted soon.")); return; }
   if (!shown.length) {
+    if (kind === "story") { box.append(el("div", "all-taken", "🎉 Every week has a storyteller — thank you!")); return; }
     const done = el("div", "all-taken", "🎉 Every week is sponsored — thank you! ");
     const a = el("a", null, "See our sponsors"); a.href = "#wall";
     done.append(a); box.append(done);
@@ -422,18 +430,17 @@ function renderWeeks(boxId, kind) {
       if (myReq && myReq.status !== "confirmed") f.append(el("small", null, "An organizer will confirm with you."));
       row.append(f);
     } else if (myReq) {
-      // A sponsorship request that an organizer has not confirmed yet
+      // A request that an organizer has not confirmed yet
       const f = el("div", "filled", "✓ Requested by you");
-      f.append(el("small", null, "An organizer will confirm with you once payment is arranged."));
+      f.append(el("small", null, kind === "sponsor" ? "An organizer will confirm with you once payment is arranged." : "An organizer will confirm with you."));
       row.append(f);
     } else {
       const label = kind === "sponsor"
         ? (i === 0 ? "No sponsor yet — sponsor this week" : "Open — sponsor this week")
-        : !me ? "Sign in to tell the story" : "Sign me up! I am happy to tell the story";
+        : "Sign me up! I am happy to tell the story";
       const b = el("button", kind === "sponsor" ? "btn-pink" : "btn-navy", label);
       b.type = "button";
       b.addEventListener("click", () => {
-        if (kind === "story" && needSignIn("#story")) return;
         if (me && !$("f-name").value) $("f-name").value = Auth.displayName(me);
         chosen = w; mode = kind;
         $("dlg-title").textContent = kind === "sponsor" ? "Sponsor this week" : "Tell the story this week";
@@ -595,13 +602,8 @@ $("rsvp-form").addEventListener("submit", async e => {
 
 $("dlg-close").addEventListener("click", () => $("dlg").close());
 
-// Sign-in (settings are in auth.js). Story sign-up requires sign-in;
-// sponsoring and RSVP are open to everyone.
-function needSignIn(hash) {
-  if (me) return false;
-  location.href = "signin.html?next=" + encodeURIComponent(hash);
-  return true;
-}
+// Sign-in (settings are in auth.js). Sponsoring, story sign-up and RSVP are open to
+// everyone; a father who is logged in also earns raffle tickets for his kids.
 function renderSignedIn() {
   if (!me) return;
   const name = Auth.displayName(me), a = $("nav-auth");
@@ -615,8 +617,7 @@ function renderSignedIn() {
     .then(r => { if (r && r.data) $("nav-admin").hidden = false; }).catch(() => {});
   if (Auth.phoneOf(me)) $("f-phone").value = Auth.phoneOf(me);
   $("promo-note").textContent = "You're logged in.";
-  $("promo-btn").textContent = "Sign up to tell a story";
-  $("promo-btn").href = "#story";
+  $("story-login").hidden = true;
 }
 
 function render() {
