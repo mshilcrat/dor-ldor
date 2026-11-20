@@ -466,10 +466,13 @@ function renderWeeks(boxId, kind) {
   });
 }
 
-// Thank-you wall: every sponsored week, past and upcoming, newest first
+// Thank-you wall: this week's sponsor and the weeks before it, newest first
 function renderWall() {
   const wall = $("wall-box"); wall.replaceChildren();
-  const sponsored = weeks.filter(w => w.sponsor).sort((a, b) => parse(b.week_date) - parse(a.week_date));
+  // A sponsor entered ahead of time is not posted until their week arrives. This week's
+  // sponsor comes first, then the earlier weeks, newest first.
+  const upTo = upcoming.length ? parse(current.week_date) : today;
+  const sponsored = weeks.filter(w => w.sponsor && parse(w.week_date) <= upTo).sort((a, b) => parse(b.week_date) - parse(a.week_date));
   sponsored.forEach(w => {
     const now = upcoming.length && w === current;
     const c = el("div", "thanks" + (now ? " now" : ""));
