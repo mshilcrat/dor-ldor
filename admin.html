@@ -236,6 +236,10 @@ function renderSponsors() {
       d.append(el("strong", null, r.sponsor_name));
       if (r.dedication) d.append(el("em", null, r.dedication));
       const c = contactLine(r.user_id); if (c && r.user_id !== me.id) d.append(c);
+      if (!r.user_id && r.phone) {   // sponsored without an account
+        const g = el("small"), a = el("a", null, r.phone); a.href = "tel:" + r.phone.replace(/[^\d+]/g, "");
+        g.append(a, " · no account"); d.append(g);
+      }
       if (!ok) acts.append(btn("teal", "Confirm", () =>
         act(db.from("sponsorships").update({ status: "confirmed" }).eq("id", r.id), "Confirmed. It now shows on the main page.")));
       acts.append(btn("ghost", ok ? "Remove" : "Decline", () => {

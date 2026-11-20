@@ -258,7 +258,7 @@
       <div class="shout" id="shout" hidden><div class="s1">NO SPONSOR YET!</div><div class="s2">WILL YOU SPONSOR THIS WEEK?</div></div>
       <div id="weeks"></div>
       <div class="raffle" id="sponsor-thanks" role="status" hidden></div>
-      <p class="note" id="sponsor-note">Log in, then tap an open week to reserve it. Your sponsorship is recorded for the organizers, who confirm it and mark the week as sponsored.</p>
+      <p class="note" id="sponsor-note">Tap an open week to reserve it. Your sponsorship is recorded for the organizers, who confirm it and mark the week as sponsored.</p>
     </div>
   </section>
 
@@ -394,8 +394,11 @@ function renderWeeks(boxId, kind) {
   const box = $(boxId);
   box.replaceChildren();
   const list = upcoming.length ? upcoming : (current ? [current] : []);
-  // Sponsored weeks leave the sponsor list (they move to the thank-you wall).
-  const shown = kind === "sponsor" ? list.filter(w => !w.sponsor) : list;
+  // A week leaves the sponsor list as soon as it is requested (once confirmed it
+  // shows on the thank-you wall). The person who requested it still sees their own.
+  const shown = kind === "sponsor"
+    ? list.filter(w => !w.sponsor && (!w.requested || mine.sponsorships.some(r => r.week_date === w.week_date)))
+    : list;
   if (!list.length) { box.append(el("p", "note", "The schedule will be posted soon.")); return; }
   if (!shown.length) {
     const done = el("div", "all-taken", "🎉 Every week is sponsored — thank you! ");
@@ -424,22 +427,22 @@ function renderWeeks(boxId, kind) {
       f.append(el("small", null, "An organizer will confirm with you once payment is arranged."));
       row.append(f);
     } else {
-      const label = !me
-        ? (kind === "sponsor" ? "Sign in to sponsor this week" : "Sign in to tell the story")
-        : kind === "sponsor"
-          ? (i === 0 ? "No sponsor yet — sponsor this week" : "Open — sponsor this week")
-          : "Sign me up! I am happy to tell the story";
+      const label = kind === "sponsor"
+        ? (i === 0 ? "No sponsor yet — sponsor this week" : "Open — sponsor this week")
+        : !me ? "Sign in to tell the story" : "Sign me up! I am happy to tell the story";
       const b = el("button", kind === "sponsor" ? "btn-pink" : "btn-navy", label);
       b.type = "button";
       b.addEventListener("click", () => {
-        if (needSignIn(kind === "sponsor" ? "#sponsor" : "#story")) return;
+        if (kind === "story" && needSignIn("#story")) return;
         if (me && !$("f-name").value) $("f-name").value = Auth.displayName(me);
         chosen = w; mode = kind;
         $("dlg-title").textContent = kind === "sponsor" ? "Sponsor this week" : "Tell the story this week";
         $("f-ded-wrap").hidden = kind !== "sponsor";
         $("dlg-sponsor").hidden = kind !== "sponsor";
-        $("f-phone-wrap").hidden = kind !== "story";
-        $("f-phone").required = kind === "story";
+        // Sponsoring needs no account; without one, a phone number is how the organizers reach the sponsor.
+        const askPhone = kind === "story" || !me;
+        $("f-phone-wrap").hidden = !askPhone;
+        $("f-phone").required = askPhone;
         $("dlg-signup").hidden = kind !== "story";
         $("dlg-week").textContent = "Motzai Shabbat, " + longDate(w.week_date) + " · Parshat " + w.parsha;
         $("dlg").showModal();
@@ -483,10 +486,14 @@ function renderZelle() {
 
 // Sponsor dialog: records the sponsorship for the organizers (shown on the admin page)
 $("dlg-sponsor").addEventListener("click", async () => {
+  const phone = $("f-phone");
+  phone.setCustomValidity(me || phone.value.replace(/\D/g, "").length >= 10 ? "" : "Please enter a 10-digit phone number");
   if (!$("dlg-form").reportValidity()) return;
   const sponsor_name = $("f-name").value.trim(), dedication = $("f-ded").value.trim();
   const thanks = $("sponsor-thanks");
-  const { error } = await db.from("sponsorships").insert({ week_date: chosen.week_date, sponsor_name, dedication });
+  const row = { week_date: chosen.week_date, sponsor_name, dedication };
+  if (!me) row.phone = phone.value.trim();
+  const { error } = await db.from("sponsorships").insert(row);
   if (error) {
     thanks.textContent = error.code === "23505"
       ? "Sorry — someone has just requested this week. Please pick another."
@@ -588,8 +595,8 @@ $("rsvp-form").addEventListener("submit", async e => {
 
 $("dlg-close").addEventListener("click", () => $("dlg").close());
 
-// Sign-in (settings are in auth.js). Sponsoring and story sign-up require
-// sign-in; RSVP is open to everyone.
+// Sign-in (settings are in auth.js). Story sign-up requires sign-in;
+// sponsoring and RSVP are open to everyone.
 function needSignIn(hash) {
   if (me) return false;
   location.href = "signin.html?next=" + encodeURIComponent(hash);
@@ -615,7 +622,7 @@ function renderSignedIn() {
 function render() {
   renderInfo();
   renderWeeks("weeks", "sponsor");
-  $("shout").hidden = !(upcoming.length && current && !current.sponsor);
+  $("shout").hidden = !(upcoming.length && current && !current.sponsor && !current.requested);
   renderWeeks("stories", "story");
   renderWall();
   renderZelle();
