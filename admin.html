@@ -229,9 +229,16 @@ function renderSponsors() {
     const row = el("div", "row"), d = el("div", "d"), acts = el("div", "acts");
     const title = el("strong", null, weekTitle(w));
     d.append(title, el("small", null, "Parshat " + w.parsha));
-    if (!r) {
+    if (!r && w.sponsor_closed) {
+      // Closed by an organizer: no sponsor, and not offered on the main page.
+      title.append(el("span", "tag open", "Closed"));
+      acts.append(btn("ghost", "Reopen", () =>
+        act(db.from("weeks").update({ sponsor_closed: false }).eq("week_date", w.week_date), "Reopened. The week is open for a sponsor again.")));
+    } else if (!r) {
       title.append(el("span", "tag open", "Open"));
       acts.append(btn("ghost", "+ Add sponsor", () => openAdd(w)));
+      acts.append(btn("ghost", "Close", () =>
+        act(db.from("weeks").update({ sponsor_closed: true }).eq("week_date", w.week_date), "Closed. The week is no longer open for a sponsor.")));
     } else {
       const ok = r.status === "confirmed";
       if (!ok) pending++;
