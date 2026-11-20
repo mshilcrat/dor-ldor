@@ -335,6 +335,7 @@ let chosen = null, mode = "sponsor";
 // Fast start: the public schedule is requested directly, the moment the page opens,
 // without waiting for the sign-in library. Last visit's copy is shown meanwhile.
 const CACHE = "dorldor-board";
+const OPEN_WEEKS = 5;   // how many open weeks each list offers at a time
 function fetchPublic() {
   const base = DORLDOR_SUPABASE.url + "/rest/v1/", key = DORLDOR_SUPABASE.anonKey;
   const headers = { apikey: key, Authorization: "Bearer " + key, "Content-Type": "application/json" };
@@ -404,9 +405,11 @@ function renderWeeks(boxId, kind) {
   const list = upcoming.length ? upcoming : (current ? [current] : []);
   // A week leaves its list as soon as it is reserved; an organizer confirms it afterwards
   // (a confirmed sponsor then shows on the thank-you wall). Whoever reserved it still sees their own.
-  const shown = kind === "sponsor"
-    ? list.filter(w => !w.sponsor && (!w.requested || mine.sponsorships.some(r => r.week_date === w.week_date)))
-    : list.filter(w => !(w.storyteller || w.story_requested) || mine.storytellers.some(r => r.week_date === w.week_date));
+  // The schedule runs to the end of the season, but only the next 5 open weeks are offered at a time.
+  const isMine = w => (kind === "sponsor" ? mine.sponsorships : mine.storytellers).some(r => r.week_date === w.week_date);
+  const taken = w => kind === "sponsor" ? (w.sponsor || w.requested) : (w.storyteller || w.story_requested);
+  let open = 0;
+  const shown = list.filter(w => isMine(w) ? !(kind === "sponsor" && w.sponsor) : (!taken(w) && ++open <= OPEN_WEEKS));
   if (!list.length) { box.append(el("p", "note", "The schedule will be posted soon.")); return; }
   if (!shown.length) {
     if (kind === "story") { box.append(el("div", "all-taken", "🎉 Every week has a storyteller — thank you!")); return; }

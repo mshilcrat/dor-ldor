@@ -221,11 +221,16 @@ function currentWeek() {
   return S.weeks.find(w => parse(w.week_date) >= t) || S.weeks[S.weeks.length - 1];
 }
 
+// The schedule runs to the end of the season; each list shows only the next 5 open weeks at a time.
+const OPEN_WEEKS = 5;
+const isUpcoming = w => { const t = new Date(); t.setHours(0, 0, 0, 0); return parse(w.week_date) >= t; };
+
 function renderSponsors() {
   const box = $("sponsors"); box.replaceChildren();
-  let pending = 0;
+  let pending = 0, open = 0;
   S.weeks.forEach(w => {
     const r = S.sponsorships.find(s => s.week_date === w.week_date);
+    if (!r && !w.sponsor_closed && isUpcoming(w) && ++open > OPEN_WEEKS) return;
     const row = el("div", "row"), d = el("div", "d"), acts = el("div", "acts");
     const title = el("strong", null, weekTitle(w));
     d.append(title, el("small", null, "Parshat " + w.parsha));
@@ -265,9 +270,10 @@ function renderSponsors() {
 
 function renderStories() {
   const box = $("stories"); box.replaceChildren();
-  let pending = 0;
+  let pending = 0, open = 0;
   S.weeks.forEach(w => {
     const r = S.storytellers.find(s => s.week_date === w.week_date);
+    if (!r && isUpcoming(w) && ++open > OPEN_WEEKS) return;
     const row = el("div", "row"), d = el("div", "d"), acts = el("div", "acts");
     const title = el("strong", null, weekTitle(w));
     d.append(title, el("small", null, "Parshat " + w.parsha));
